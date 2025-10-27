@@ -66,7 +66,7 @@
       ],
       "artifactName": "${productName}-${version}-Portable.${ext}",
       "forceCodeSigning": false,
-      "verifyUpdateCodeSignature": false
+      "verifyUpdateCodeSignature": true
     },
     "nsis": {
       "oneClick": false,

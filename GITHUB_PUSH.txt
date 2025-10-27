@@ -1,0 +1,61 @@
+# Como fazer PUSH para o GitHub
+
+## ✅ MÉTODO 1: Com Token de Acesso Pessoal
+
+1. Crie um token em: https://github.com/settings/tokens
+   - Generate new token (classic)
+   - Marque: repo
+   - Copie o token
+
+2. Execute no terminal:
+   git push -u origin main
+
+3. Quando pedir credenciais:
+   - Username: testeklv123-star
+   - Password: [COLE SEU TOKEN AQUI]
+
+## ✅ MÉTODO 2: Usar GitHub CLI
+
+1. Instale: https://cli.github.com/
+
+2. Execute:
+   gh auth login
+
+3. Siga as instruções
+
+4. Depois:
+   git push -u origin main
+
+## ✅ MÉTODO 3: SSH (Mais Seguro)
+
+1. Gerar chave SSH:
+   ssh-keygen -t ed25519 -C "seu-email@exemplo.com"
+
+2. Adicionar ao GitHub:
+   - Copie a chave pública (~/.ssh/id_ed25519.pub)
+   - Vá em: https://github.com/settings/keys
+   - Clique "New SSH key"
+   - Cole a chave
+
+3. Mudar URL do remote:
+   git remote set-url origin git@github.com:testeklv123-star/-INTERATIVELEADS.git
+
+4. Push:
+   git push -u origin main
+
+## 🎯 ATALHO RÁPIDO (se já tem token):
+
+Execute:
+git push -u origin main
+
+Quando pedir:
+- Username: testeklv123-star
+- Password: [seu_token_aqui]
+
+---
+
+IMPORTANTE: 
+- NUNCA compartilhe seu token
+- Tokens são como senhas
+- Guarde em local seguro
+
