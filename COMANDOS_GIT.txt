@@ -1,0 +1,25 @@
+# Comandos para executar após criar o repositório no GitHub
+
+# 1. Primeiro, crie o repositório em:
+#    https://github.com/new
+#    Nome: -INTERATIVELEADS
+#    NÃO inicialize com README
+
+# 2. Depois execute estes comandos:
+
+# Limpar remote atual
+git remote remove origin
+
+# Adicionar novamente com token
+git remote add origin https://[SEU_TOKEN_AQUI]@github.com/testeklv123-star/-INTERATIVELEADS.git
+
+# Fazer push
+git push -u origin main
+
+# OU se preferir sem token na URL (mais seguro):
+git remote set-url origin https://github.com/testeklv123-star/-INTERATIVELEADS.git
+git push -u origin main
+# Quando pedir credenciais:
+# Username: testeklv123-star  
+# Password: [SEU_TOKEN_AQUI]
+
