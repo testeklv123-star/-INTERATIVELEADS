@@ -2,7 +2,7 @@
   "name": "interativeleads",
   "productName": "InterativeLeads",
   "description": "Sistema Profissional de Captação de Leads Interativo para Totens",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "InterativeLeads Team",
   "private": true,
   "main": "electron/main.js",
@@ -60,21 +60,33 @@
     "win": {
       "target": [
         {
-          "target": "portable",
+          "target": "nsis",
           "arch": ["x64"]
         }
       ],
-      "artifactName": "${productName}-${version}-Portable.${ext}",
+      "artifactName": "${productName}-Setup-${version}.${ext}",
       "forceCodeSigning": false,
-      "verifyUpdateCodeSignature": true
+      "verifyUpdateCodeSignature": false
     },
     "nsis": {
       "oneClick": false,
+      "allowElevation": true,
       "allowToChangeInstallationDirectory": true,
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "installerHeaderIcon": "build/icon.ico",
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "InterativeLeads",
-      "license": "LICENSE.txt"
+      "deleteAppDataOnUninstall": false,
+      "perMachine": false,
+      "runAfterFinish": true,
+      "artifactName": "${productName}-Setup-${version}.${ext}",
+      "license": "LICENSE.txt",
+      "displayLanguageSelector": false,
+      "installerLanguages": ["pt_BR"],
+      "language": "1046",
+      "include": "build/installer.nsh"
     },
     "mac": {
       "target": ["dmg"],

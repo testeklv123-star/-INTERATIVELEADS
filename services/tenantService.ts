@@ -192,3 +192,39 @@ export const fetchTenantConfig = (tenantId: string): Promise<TenantConfig> => {
     }, 1000);
   });
 };
+
+/**
+ * Buscar tenant com modo híbrido (online + local)
+ * Tenta API online primeiro, fallback para dados locais
+ */
+export async function fetchHybridTenantConfig(tenantId: string): Promise<TenantConfig> {
+  console.log('🔀 [Hybrid] Tentando buscar tenant do servidor online...');
+  
+  try {
+    // Importar serviço online dinamicamente
+    const { fetchOnlineTenantConfig, checkAPIConnection } = await import('./onlineTenantService');
+    
+    // Verificar se API está disponível
+    const isOnline = await checkAPIConnection();
+    
+    if (isOnline) {
+      console.log('✅ [Hybrid] API online disponível, buscando configuração...');
+      try {
+        const onlineConfig = await fetchOnlineTenantConfig(tenantId);
+        console.log('✅ [Hybrid] Configuração carregada do servidor online');
+        return onlineConfig;
+      } catch (error) {
+        console.warn('⚠️ [Hybrid] Erro ao buscar do servidor, usando dados locais');
+        // Continua para o fallback local
+      }
+    } else {
+      console.log('📡 [Hybrid] API offline, usando dados locais');
+    }
+  } catch (error) {
+    console.warn('⚠️ [Hybrid] Serviço online não disponível, usando dados locais');
+  }
+  
+  // Fallback para dados locais (mock)
+  console.log('💾 [Hybrid] Carregando configuração local/mock');
+  return fetchTenantConfig(tenantId);
+}
