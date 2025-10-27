@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>White-Label Totem</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      /* 
+        CSS VARIABLES - DYNAMIC THEME
+        Default values - will be overwritten by JavaScript
+      */
+      :root {
+        /* Colors - Neutral Default */
+        --color-primary: #6366F1;
+        --color-secondary: #8B5CF6;
+        --color-accent: #EC4899;
+        --color-background: #FFFFFF;
+        --color-text: #1F2937;
+        --color-text-secondary: #6B7280;
+        --color-success: #10B981;
+        --color-error: #EF4444;
+        --color-button-primary-bg: #6366F1;
+        --color-button-primary-text: #FFFFFF;
+        --color-button-secondary-bg: #8B5CF6;
+        --color-button-secondary-text: #FFFFFF;
+        
+        /* Typography */
+        --font-primary: 'Inter', sans-serif;
+        --font-secondary: 'Roboto', sans-serif;
+        --heading-weight: 700;
+        --body-weight: 400;
+        
+        /* Spacing */
+        --border-radius: 8px;
+        --padding-base: 16px;
+
+        /* Fixed Font Sizes for Totem Readability */
+        --font-size-h1: 3rem; /* 48px */
+        --font-size-h2: 2.25rem; /* 36px */
+        --font-size-h3: 1.75rem; /* 28px */
+        --font-size-body: 1.25rem; /* 20px */
+        --font-size-small: 1rem; /* 16px */
+      }
+      
+      body {
+        font-family: var(--font-primary);
+        font-weight: var(--body-weight);
+        color: var(--color-text);
+        background-color: var(--color-background);
+        font-size: var(--font-size-body);
+        line-height: 1.6;
+        overflow: hidden; /* Prevent scrolling on totem */
+      }
+
+      /* UX Polish: Animations */
+      @keyframes page-fade-in {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      .page-container {
+        animation: page-fade-in 0.5s ease-out forwards;
+      }
+
+      @keyframes modal-scale-in {
+        from { opacity: 0; transform: scale(0.9); }
+        to { opacity: 1; transform: scale(1); }
+      }
+
+      .modal-content-animated {
+        animation: modal-scale-in 0.3s ease-out forwards;
+      }
+      
+      @keyframes hover-glow {
+        0%, 100% { box-shadow: 0 0 5px rgba(255, 255, 255, 0); }
+        50% { box-shadow: 0 0 20px rgba(255, 255, 255, 0.3); }
+      }
+      .btn-hover-glow:hover {
+        filter: brightness(1.1);
+      }
+
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react-router-dom": "https://aistudiocdn.com/react-router-dom@^7.9.4",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react-hook-form": "https://aistudiocdn.com/react-hook-form@^7.65.0",
+    "zustand/": "https://aistudiocdn.com/zustand@^5.0.8/",
+    "zustand": "https://aistudiocdn.com/zustand@^5.0.8"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>

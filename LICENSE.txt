@@ -1,0 +1,37 @@
+LICENÇA DE USO - INTERATIVELEADS
+Copyright © 2025 InterativeLeads Team
+
+==================================================
+LICENÇA COMERCIAL
+==================================================
+
+Este software é proprietário e protegido por direitos autorais.
+
+PERMISSÕES:
+✓ Uso comercial por licenciados autorizados
+✓ Instalação em múltiplos totens (conforme licença adquirida)
+✓ Personalização de marca e conteúdo
+✓ Suporte técnico incluído
+
+RESTRIÇÕES:
+✗ Redistribuição do software
+✗ Engenharia reversa
+✗ Revenda sem autorização
+✗ Remoção de créditos
+
+GARANTIA:
+Este software é fornecido "como está", sem garantias expressas ou implícitas.
+O desenvolvedor não se responsabiliza por danos diretos ou indiretos decorrentes
+do uso deste software.
+
+SUPORTE:
+Para suporte técnico, atualizações ou aquisição de licenças adicionais,
+entre em contato através do e-mail: suporte@interativeleads.com
+
+Ao instalar e usar este software, você concorda com os termos desta licença.
+
+==================================================
+DATA: 27 de Outubro de 2025
+VERSÃO: 1.0.0
+==================================================
+

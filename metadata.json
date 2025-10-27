@@ -1,0 +1,5 @@
+
+{
+  "name": "White-Label Totem Application",
+  "description": "A multi-tenant, white-label application for interactive touch-screen totems. It allows for complete brand customization, including logos, colors, and prize configurations, loaded dynamically per tenant."
+}

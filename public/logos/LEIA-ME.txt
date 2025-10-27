@@ -1,0 +1,74 @@
+╔════════════════════════════════════════════════════════════╗
+║          COMO ADICIONAR SUAS PRÓPRIAS IMAGENS             ║
+╚════════════════════════════════════════════════════════════╝
+
+📁 LOCALIZAÇÃO:
+   Esta pasta: public/logos/
+
+📝 FORMATOS ACEITOS:
+   - PNG (recomendado)
+   - JPG/JPEG
+   - SVG (vetorial, melhor qualidade)
+
+📐 TAMANHOS RECOMENDADOS:
+
+   1. Logo Principal (main):
+      - Largura: 300-400px
+      - Altura: 100-150px
+      - Formato: Horizontal/Retangular
+      - Exemplo: tech-store-main.svg
+
+   2. Logo Ícone (center/watermark):
+      - Largura: 150x150px
+      - Altura: 150x150px
+      - Formato: Quadrado
+      - Exemplo: tech-store-icon.svg
+
+💡 NOMENCLATURA:
+   Use nomes descritivos e sem espaços:
+   ✅ BOM: minha-loja-logo.png
+   ❌ RUIM: Logo da Minha Loja 2025.png
+
+🔧 COMO USAR SUAS IMAGENS:
+
+   1. Copie suas imagens para esta pasta
+   
+   2. Abra: services/tenantService.ts
+   
+   3. Atualize os caminhos:
+      "logos": {
+        "main_logo_url": "/logos/seu-logo-principal.png",
+        "center_logo_url": "/logos/seu-icone.png",
+        "watermark_url": "/logos/seu-icone.png"
+      }
+   
+   4. Salve e recarregue o navegador!
+
+📋 EXEMPLO PRÁTICO:
+
+   Você tem estas imagens:
+   - minha-empresa-logo.png (400x120px)
+   - minha-empresa-icon.png (150x150px)
+
+   Copie para: public/logos/
+
+   No tenantService.ts:
+   "logos": {
+     "main_logo_url": "/logos/minha-empresa-logo.png",
+     "center_logo_url": "/logos/minha-empresa-icon.png",
+     "watermark_url": "/logos/minha-empresa-icon.png"
+   }
+
+⚠️ IMPORTANTE:
+   - Os caminhos sempre começam com /logos/
+   - Não use espaços nos nomes dos arquivos
+   - Imagens muito grandes podem demorar para carregar
+   - Recomendado: máximo 500KB por imagem
+
+🎨 DICA:
+   Use ferramentas online gratuitas para otimizar:
+   - TinyPNG.com (para PNG/JPG)
+   - SVGOMG.net (para SVG)
+
+═══════════════════════════════════════════════════════════
+
