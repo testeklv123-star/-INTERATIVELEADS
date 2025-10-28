@@ -15,7 +15,15 @@
     "electron:build": "npm run build && electron-builder",
     "electron:build:win": "npm run build && electron-builder --win",
     "electron:build:mac": "npm run build && electron-builder --mac",
-    "electron:build:linux": "npm run build && electron-builder --linux"
+    "electron:build:linux": "npm run build && electron-builder --linux",
+    "electron:build:ci": "npm run build && electron-builder --dir",
+    "lint": "eslint . --ext .ts,.tsx,.js,.cjs,.mjs --max-warnings=0",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run typecheck",
+    "backend:typecheck": "npm run typecheck --prefix backend",
+    "backend:test": "npm run test --prefix backend",
+    "backend:build": "npm run build --prefix backend",
+    "ci:build": "npm run backend:build && npm run electron:build:ci"
   },
   "dependencies": {
     "better-sqlite3": "^12.4.1",
@@ -28,12 +36,18 @@
     "zustand": "^5.0.8"
   },
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.0",
     "concurrently": "^9.2.1",
     "cross-env": "^10.1.0",
     "electron": "^38.4.0",
     "electron-builder": "^26.0.12",
+    "eslint": "^8.57.1",
+    "eslint-plugin-jsx-a11y": "^6.8.0",
+    "eslint-plugin-react": "^7.36.1",
+    "eslint-plugin-react-hooks": "^4.6.0",
     "typescript": "~5.8.2",
     "vite": "^6.2.0",
     "wait-on": "^9.0.1"
