@@ -10,7 +10,11 @@
     "build": "tsc --project tsconfig.json",
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit",
-    "test": "npm run typecheck"
+    "test": "vitest run --runInBand",
+    "test:watch": "vitest",
+    "migration:generate": "typeorm-ts-node-commonjs migration:generate src/db/migrations/AutoMigration -d src/db/data-source.ts",
+    "migration:run": "typeorm-ts-node-commonjs migration:run -d src/db/data-source.ts",
+    "migration:revert": "typeorm-ts-node-commonjs migration:revert -d src/db/data-source.ts"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -20,6 +24,8 @@
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
     "pg": "^8.13.0",
+    "reflect-metadata": "^0.2.2",
+    "typeorm": "^0.3.20",
     "zod": "^3.23.8"
   },
   "devDependencies": {
@@ -29,7 +35,10 @@
     "@types/jsonwebtoken": "^9.0.6",
     "@types/node": "^22.14.0",
     "@types/pg": "^8.6.6",
+    "pg-mem": "^3.0.5",
+    "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.2",
+    "vitest": "^2.1.4"
   }
 }

@@ -1,38 +1,14 @@
-import { Pool } from 'pg';
-
-export interface UserRecord {
-  id: number;
-  email: string;
-  password_hash: string;
-  role: string;
-  tenant_db_id: number | null;
-  tenant_slug: string | null;
-  is_active: boolean;
-}
-
-const baseQuery = `
-  SELECT
-    u.id,
-    u.email,
-    u.password_hash,
-    u.role,
-    u.tenant_id AS tenant_db_id,
-    t.tenant_id AS tenant_slug,
-    u.is_active
-  FROM users u
-  LEFT JOIN tenants t ON t.id = u.tenant_id
-`;
+import { Repository } from 'typeorm';
+import { User } from '../../db/entities/User.entity';
 
 export class AuthRepository {
-  constructor(private readonly pool: Pool) {}
+  constructor(private readonly repo: Repository<User>) {}
 
-  async findByEmail(email: string): Promise<UserRecord | null> {
-    const result = await this.pool.query<UserRecord>(`${baseQuery} WHERE u.email = $1`, [email]);
-    return result.rows[0] ?? null;
+  async findByEmail(email: string): Promise<User | null> {
+    return this.repo.findOne({ where: { email } });
   }
 
-  async findById(id: number): Promise<UserRecord | null> {
-    const result = await this.pool.query<UserRecord>(`${baseQuery} WHERE u.id = $1`, [id]);
-    return result.rows[0] ?? null;
+  async findById(id: number): Promise<User | null> {
+    return this.repo.findOne({ where: { id } });
   }
 }

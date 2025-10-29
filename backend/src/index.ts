@@ -4,12 +4,22 @@ import cors from 'cors';
 import helmet from 'helmet';
 
 import { env } from './config/env';
-import { pool } from './db/connection';
+import { AppDataSource } from './db/data-source';
 import { buildTenantRouter } from './modules/tenant';
 import { buildAuthRouter } from './modules/auth';
 import { AppError } from './errors/appError';
 
 const app = express();
+
+// Inicializar TypeORM
+AppDataSource.initialize()
+  .then(() => {
+    console.log('✅ Conectado ao PostgreSQL via TypeORM');
+  })
+  .catch((error) => {
+    console.error('❌ Falha ao conectar ao PostgreSQL via TypeORM:', error);
+    process.exit(1);
+  });
 
 app.use(helmet());
 app.use(cors({ origin: env.corsOrigin || '*' }));
@@ -19,8 +29,8 @@ app.get('/health', (_req: Request, res: Response) => {
   res.json({ status: 'ok' });
 });
 
-app.use('/auth', buildAuthRouter(pool));
-app.use('/tenants', buildTenantRouter(pool));
+app.use('/auth', buildAuthRouter(AppDataSource));
+app.use('/tenants', buildTenantRouter(AppDataSource));
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {

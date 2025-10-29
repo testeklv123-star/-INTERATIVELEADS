@@ -20,6 +20,7 @@
     "lint": "eslint . --ext .ts,.tsx,.js,.cjs,.mjs --max-warnings=0",
     "typecheck": "tsc --noEmit",
     "test": "npm run typecheck",
+    "backend:dev": "npm run dev --prefix backend",
     "backend:typecheck": "npm run typecheck --prefix backend",
     "backend:test": "npm run test --prefix backend",
     "backend:build": "npm run build --prefix backend",

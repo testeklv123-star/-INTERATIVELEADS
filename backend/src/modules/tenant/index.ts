@@ -1,10 +1,12 @@
-import { Pool } from 'pg';
-import { createTenantRouter } from './tenant.controller';
+import { DataSource } from 'typeorm';
+import { Tenant } from '../../db/entities/Tenant.entity';
 import { TenantRepository } from './tenant.repository';
 import { TenantService } from './tenant.service';
+import { createTenantRouter } from './tenant.controller';
 
-export const buildTenantRouter = (pool: Pool) => {
-  const repository = new TenantRepository(pool);
+export const buildTenantRouter = (dataSource: DataSource) => {
+  const tenantRepository = dataSource.getRepository(Tenant);
+  const repository = new TenantRepository(tenantRepository);
   const service = new TenantService(repository);
   return createTenantRouter(service);
 };
