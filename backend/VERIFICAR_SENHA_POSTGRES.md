@@ -90,7 +90,7 @@ Atualize o arquivo `backend/.env`:
 
 ```powershell
 # Se a senha for "postgres":
-$content = "NODE_ENV=development`nPORT=4000`nDATABASE_URL=postgres://postgres:postgres@localhost:5432/interativeleads`nJWT_SECRET=dev-jwt-secret-change-me-in-production-32chars-minimum`nJWT_REFRESH_SECRET=dev-jwt-refresh-secret-change-me-prod-32chars-min`nJWT_ACCESS_EXPIRES_IN=15m`nJWT_REFRESH_EXPIRES_IN=7d`nCORS_ORIGIN=http://localhost:5173,http://localhost:3000"; $content | Set-Content -Path .env
+$content = "NODE_ENV=development`nPORT=4000`nDATABASE_URL=postgres://postgres:postgres@localhost:5432/interativeleads`nJWT_SECRET=dev-jwt-secret-change-me-in-production-32chars-minimum`nJWT_REFRESH_SECRET=dev-jwt-refresh-secret-change-me-prod-32chars-min`nJWT_ACCESS_EXPIRES_IN=15m`nJWT_REFRESH_EXPIRES_IN=7d`nCORS_ORIGIN=http://localhost:5000"; $content | Set-Content -Path .env
 
 # Teste novamente:
 node test-connection.js
@@ -113,7 +113,7 @@ Se quiser ir direto ao ponto:
 3. Execute no PowerShell (no diretório backend/):
 
 ```powershell
-$content = "NODE_ENV=development`nPORT=4000`nDATABASE_URL=postgres://postgres:postgres@localhost:5432/interativeleads`nJWT_SECRET=dev-jwt-secret-change-me-in-production-32chars-minimum`nJWT_REFRESH_SECRET=dev-jwt-refresh-secret-change-me-prod-32chars-min`nJWT_ACCESS_EXPIRES_IN=15m`nJWT_REFRESH_EXPIRES_IN=7d`nCORS_ORIGIN=http://localhost:5173,http://localhost:3000"; $content | Set-Content -Path .env
+$content = "NODE_ENV=development`nPORT=4000`nDATABASE_URL=postgres://postgres:postgres@localhost:5432/interativeleads`nJWT_SECRET=dev-jwt-secret-change-me-in-production-32chars-minimum`nJWT_REFRESH_SECRET=dev-jwt-refresh-secret-change-me-prod-32chars-min`nJWT_ACCESS_EXPIRES_IN=15m`nJWT_REFRESH_EXPIRES_IN=7d`nCORS_ORIGIN=http://localhost:5000"; $content | Set-Content -Path .env
 
 node test-connection.js
 npm run migration:run

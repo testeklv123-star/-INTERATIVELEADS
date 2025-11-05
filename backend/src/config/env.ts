@@ -59,7 +59,7 @@ const parseEnv = () => {
 
   return {
     nodeEnv: env.NODE_ENV,
-    port: env.PORT ? Number(env.PORT) : 4000,
+    port: env.PORT ? Number(env.PORT) : 5000,
     databaseUrl,
     jwtSecret,
     jwtRefreshSecret,

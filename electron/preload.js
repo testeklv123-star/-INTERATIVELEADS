@@ -17,13 +17,18 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // ==================== LEADS ====================
   saveLead: (leadData) => ipcRenderer.invoke('lead:save', leadData),
+  getLead: (leadId) => ipcRenderer.invoke('lead:get', leadId),
   getLeads: (tenantId, limit = 1000) => ipcRenderer.invoke('lead:list', tenantId, limit),
   getLeadsCount: (tenantId) => ipcRenderer.invoke('lead:count', tenantId),
+  updateLead: (leadId, updates) => ipcRenderer.invoke('lead:update', leadId, updates),
+  deleteLead: (leadId) => ipcRenderer.invoke('lead:delete', leadId),
 
   // ==================== PRÊMIOS ====================
   updatePrizeInventory: (data) => ipcRenderer.invoke('prize:update-inventory', data),
   getPrizeInventory: (tenantId, gameType) => ipcRenderer.invoke('prize:get-inventory', tenantId, gameType),
   decrementPrize: (tenantId, prizeId) => ipcRenderer.invoke('prize:decrement', tenantId, prizeId),
+  getPrize: (prizeId) => ipcRenderer.invoke('prize:get', prizeId),
+  deletePrize: (tenantId, prizeId) => ipcRenderer.invoke('prize:delete', tenantId, prizeId),
 
   // ==================== ESTATÍSTICAS ====================
   getStats: (tenantId) => ipcRenderer.invoke('stats:get', tenantId),
@@ -36,6 +41,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // ==================== CONFIGURAÇÕES ====================
   getSetting: (key) => ipcRenderer.invoke('settings:get', key),
   setSetting: (key, value) => ipcRenderer.invoke('settings:set', key, value),
+  listSettings: () => ipcRenderer.invoke('settings:list'),
+  deleteSetting: (key) => ipcRenderer.invoke('settings:delete', key),
 
   // ==================== APP INFO ====================
   getAppVersion: () => ipcRenderer.invoke('app:version'),

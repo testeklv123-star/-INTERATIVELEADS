@@ -81,7 +81,7 @@ REACT_APP_TENANT_MODE=hybrid
 # Usar JSON Server para testes rápidos
 npm install -g json-server
 echo '{"tenants": []}' > db.json
-json-server --watch db.json --port 3001
+json-server --watch db.json --port 5000
 ```
 
 #### **Passo 3: Rebuild**
@@ -285,12 +285,12 @@ release/InterativeLeads-Setup-1.0.1.exe
 
 ```bash
 # 1. Criar .env.local
-echo "REACT_APP_API_URL=http://localhost:3001" > .env.local
+echo "REACT_APP_API_URL=http://localhost:5000" > .env.local
 echo "REACT_APP_API_KEY=teste123" >> .env.local
 
 # 2. Criar backend (exemplo com JSON Server)
 npm install -g json-server
-json-server --watch db.json --port 3001
+json-server --watch db.json --port 5000
 
 # 3. Rebuild
 npm run electron:build:win
@@ -314,7 +314,7 @@ npm run electron:build:win
 
 ```env
 # Desenvolvimento
-REACT_APP_API_URL=http://localhost:3001/api
+REACT_APP_API_URL=http://localhost:5000/api
 
 # Produção
 REACT_APP_API_URL=https://api.interativeleads.com/v1

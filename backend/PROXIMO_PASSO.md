@@ -31,7 +31,7 @@ JWT_SECRET=dev-jwt-secret-change-me-in-production-32chars-minimum
 JWT_REFRESH_SECRET=dev-jwt-refresh-secret-change-me-prod-32chars-min
 JWT_ACCESS_EXPIRES_IN=15m
 JWT_REFRESH_EXPIRES_IN=7d
-CORS_ORIGIN=http://localhost:5173,http://localhost:3000
+CORS_ORIGIN=http://localhost:5000
 ```
 
 4. **IMPORTANTE:** Substitua `SUA_SENHA_AQUI` pela senha que você configurou ao instalar o PostgreSQL

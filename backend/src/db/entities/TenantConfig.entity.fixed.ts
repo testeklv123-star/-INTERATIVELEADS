@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToOne, type Relation } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToOne } from 'typeorm';
 import { Tenant } from './Tenant.entity';
 import { z } from 'zod';
 import { ThemeSchema, FormSettingsSchema } from '../../modules/tenant/tenant.schemas';
@@ -14,6 +14,6 @@ export class TenantConfig {
   @Column({ type: 'jsonb' })
   form_settings!: z.infer<typeof FormSettingsSchema>;
 
-  @OneToOne(() => Tenant, (tenant: Tenant) => tenant.config, { onDelete: 'CASCADE' })
-  tenant!: Relation<Tenant>;
+  @OneToOne(() => Tenant, (tenant) => tenant.config)
+  tenant!: Tenant;
 }

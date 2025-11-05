@@ -189,7 +189,7 @@ JWT_SECRET=secret-com-no-minimo-32-caracteres
 JWT_REFRESH_SECRET=refresh-secret-32-chars-min
 
 # CORS
-CORS_ORIGIN=http://localhost:5173,http://localhost:3000
+CORS_ORIGIN=http://localhost:5000
 ```
 
 ⚠️ **IMPORTANTE:** Gere secrets fortes para produção!

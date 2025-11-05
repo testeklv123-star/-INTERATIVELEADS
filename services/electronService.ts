@@ -12,12 +12,17 @@ interface ElectronAPI {
   deleteTenant: (tenantId: string) => Promise<{ success: boolean; error?: string }>;
   
   saveLead: (leadData: any) => Promise<{ success: boolean; data?: any; error?: string }>;
+  getLead: (leadId: number | string) => Promise<{ success: boolean; data?: any; error?: string }>;
   getLeads: (tenantId: string, limit?: number) => Promise<{ success: boolean; data?: any[]; error?: string }>;
   getLeadsCount: (tenantId: string) => Promise<{ success: boolean; data?: number; error?: string }>;
+  updateLead: (leadId: number | string, updates: any) => Promise<{ success: boolean; error?: string }>;
+  deleteLead: (leadId: number | string) => Promise<{ success: boolean; error?: string }>;
   
   updatePrizeInventory: (data: any) => Promise<{ success: boolean; error?: string }>;
-  getPrizeInventory: (tenantId: string, gameType: string) => Promise<{ success: boolean; data?: any[]; error?: string }>;
+  getPrizeInventory: (tenantId: string, gameType?: string) => Promise<{ success: boolean; data?: any[]; error?: string }>;
   decrementPrize: (tenantId: string, prizeId: string) => Promise<{ success: boolean; error?: string }>;
+  getPrize: (prizeId: string) => Promise<{ success: boolean; data?: any; error?: string }>;
+  deletePrize: (tenantId: string, prizeId: string) => Promise<{ success: boolean; error?: string }>;
   
   getStats: (tenantId: string) => Promise<{ success: boolean; data?: any; error?: string }>;
   
@@ -27,6 +32,8 @@ interface ElectronAPI {
   
   getSetting: (key: string) => Promise<{ success: boolean; data?: any; error?: string }>;
   setSetting: (key: string, value: any) => Promise<{ success: boolean; error?: string }>;
+  listSettings: () => Promise<{ success: boolean; data?: any[]; error?: string }>;
+  deleteSetting: (key: string) => Promise<{ success: boolean; error?: string }>;
   
   getAppVersion: () => Promise<{ success: boolean; data?: string; error?: string }>;
   getUserDataPath: () => Promise<{ success: boolean; data?: string; error?: string }>;
@@ -107,6 +114,13 @@ class ElectronService {
     return window.electronAPI!.saveLead(leadData);
   }
 
+  async getLead(leadId: number | string) {
+    if (!this.isElectron) {
+      throw new Error('Electron API não disponível');
+    }
+    return window.electronAPI!.getLead(leadId);
+  }
+
   async getLeads(tenantId: string, limit = 1000) {
     if (!this.isElectron) {
       throw new Error('Electron API não disponível');
@@ -121,21 +135,30 @@ class ElectronService {
     return window.electronAPI!.getLeadsCount(tenantId);
   }
 
-  // ==================== PRÊMIOS ====================
-
-  async updatePrizeInventory(tenantId: string, gameType: string, prizeId: string, updates: any) {
+  async updateLead(leadId: number | string, updates: any) {
     if (!this.isElectron) {
       throw new Error('Electron API não disponível');
     }
-    return window.electronAPI!.updatePrizeInventory({
-      tenantId,
-      gameType,
-      prizeId,
-      updates
-    });
+    return window.electronAPI!.updateLead(leadId, updates);
   }
 
-  async getPrizeInventory(tenantId: string, gameType: string) {
+  async deleteLead(leadId: number | string) {
+    if (!this.isElectron) {
+      throw new Error('Electron API não disponível');
+    }
+    return window.electronAPI!.deleteLead(leadId);
+  }
+
+  // ==================== PRÊMIOS ====================
+
+  async updatePrizeInventory(data: any) {
+    if (!this.isElectron) {
+      throw new Error('Electron API não disponível');
+    }
+    return window.electronAPI!.updatePrizeInventory(data);
+  }
+
+  async getPrizeInventory(tenantId: string, gameType?: string) {
     if (!this.isElectron) {
       throw new Error('Electron API não disponível');
     }
@@ -147,6 +170,20 @@ class ElectronService {
       throw new Error('Electron API não disponível');
     }
     return window.electronAPI!.decrementPrize(tenantId, prizeId);
+  }
+
+  async getPrize(prizeId: string) {
+    if (!this.isElectron) {
+      throw new Error('Electron API não disponível');
+    }
+    return window.electronAPI!.getPrize(prizeId);
+  }
+
+  async deletePrize(tenantId: string, prizeId: string) {
+    if (!this.isElectron) {
+      throw new Error('Electron API não disponível');
+    }
+    return window.electronAPI!.deletePrize(tenantId, prizeId);
   }
 
   // ==================== ESTATÍSTICAS ====================
@@ -195,6 +232,20 @@ class ElectronService {
       throw new Error('Electron API não disponível');
     }
     return window.electronAPI!.setSetting(key, value);
+  }
+
+  async listSettings() {
+    if (!this.isElectron) {
+      throw new Error('Electron API não disponível');
+    }
+    return window.electronAPI!.listSettings();
+  }
+
+  async deleteSetting(key: string) {
+    if (!this.isElectron) {
+      throw new Error('Electron API não disponível');
+    }
+    return window.electronAPI!.deleteSetting(key);
   }
 
   // ==================== APP INFO ====================

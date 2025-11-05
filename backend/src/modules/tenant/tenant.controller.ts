@@ -28,6 +28,12 @@ export const createTenantRouter = (service: TenantService): Router => {
     }
   });
 
+  router.get('/:tenantId/config', requireTenantAccess(), async (req: Request, res: Response) => {
+    const config = await service.getConfig(req.params.tenantId);
+    if (!config) return res.status(404).json({ message: 'Config not found' });
+    return res.json(config);
+  });
+
   router.post('/', requireRoles('platform_admin'), requireTenantAccessFromBody(), async (req: Request, res: Response, next: NextFunction) => {
     try {
       const input = TenantConfigCreateSchema.parse(req.body);

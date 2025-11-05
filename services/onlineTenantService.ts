@@ -6,8 +6,8 @@
 import { TenantConfig } from '../types';
 
 // Configurar URL da sua API
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://sua-api.com/api';
-const API_KEY = process.env.REACT_APP_API_KEY || 'sua-chave-api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const API_KEY = process.env.REACT_APP_API_KEY || 'default-api-key';
 
 /**
  * Buscar configuração de tenant da API online
@@ -16,7 +16,7 @@ export async function fetchOnlineTenantConfig(tenantId: string): Promise<TenantC
   console.log(`🌐 [Online API] Buscando tenant: ${tenantId}`);
   
   try {
-    const response = await fetch(`${API_BASE_URL}/tenants/${tenantId}`, {
+    const response = await fetch(`${API_BASE_URL}/tenants?tenant_id=${tenantId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -36,9 +36,22 @@ export async function fetchOnlineTenantConfig(tenantId: string): Promise<TenantC
     }
 
     const data = await response.json();
-    console.log(`✅ [Online API] Tenant carregado: ${data.brand_name}`);
     
-    return data as TenantConfig;
+    // json-server retorna um array, então precisamos encontrar o tenant correto
+    let tenant: TenantConfig | null = null;
+    if (Array.isArray(data)) {
+      tenant = data.find((t: TenantConfig) => t.tenant_id === tenantId) || null;
+    } else if (data.tenant_id === tenantId) {
+      tenant = data as TenantConfig;
+    }
+    
+    if (!tenant) {
+      throw new Error(`Tenant '${tenantId}' não encontrado na API`);
+    }
+    
+    console.log(`✅ [Online API] Tenant carregado: ${tenant.brand_name}`);
+    
+    return tenant;
   } catch (error) {
     console.error('❌ [Online API] Erro:', error);
     throw error;
@@ -125,7 +138,7 @@ export async function registerTenant(config: TenantConfig): Promise<{success: bo
  */
 export async function updateOnlineTenant(tenantId: string, config: Partial<TenantConfig>): Promise<boolean> {
   try {
-    const response = await fetch(`${API_BASE_URL}/tenants/${tenantId}`, {
+    const response = await fetch(`${API_BASE_URL}/tenants?tenant_id=${tenantId}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -146,7 +159,7 @@ export async function updateOnlineTenant(tenantId: string, config: Partial<Tenan
  */
 export async function deleteOnlineTenant(tenantId: string): Promise<boolean> {
   try {
-    const response = await fetch(`${API_BASE_URL}/tenants/${tenantId}`, {
+    const response = await fetch(`${API_BASE_URL}/tenants?tenant_id=${tenantId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${API_KEY}`
@@ -187,16 +200,18 @@ export async function syncTenantWithServer(tenantId: string, localConfig: Tenant
  */
 export async function checkAPIConnection(): Promise<boolean> {
   try {
-    const response = await fetch(`${API_BASE_URL}/health`, {
+    // json-server não tem /health, então testamos o endpoint /tenants
+    const response = await fetch(`${API_BASE_URL}/tenants`, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${API_KEY}`
-      }
+        'Content-Type': 'application/json'
+      },
+      signal: AbortSignal.timeout(3000) // timeout de 3 segundos
     });
 
     return response.ok;
   } catch (error) {
-    console.error('❌ [API] Sem conexão com o servidor');
+    console.error('❌ [API] Sem conexão com o servidor:', error);
     return false;
   }
 }

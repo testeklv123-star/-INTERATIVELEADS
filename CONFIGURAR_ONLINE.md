@@ -28,17 +28,17 @@ server\start-server.bat
 #### **Opção B: Comando manual**
 ```bash
 cd server
-json-server --watch db.json --port 3001 --host 0.0.0.0
+json-server --watch db.json --port 5000 --host 0.0.0.0
 ```
 
 **Resultado:**
 ```
-✔ JSON Server is running on port 3001
+✔ JSON Server is running on port 5000
 Resources:
-  http://localhost:3001/tenants
+  http://localhost:5000/tenants
 
 Home:
-  http://localhost:3001
+  http://localhost:5000
 ```
 
 ### **Passo 3: Configurar o App**
@@ -47,7 +47,7 @@ Crie um arquivo `.env.local` na raiz do projeto:
 
 ```env
 # API REST
-REACT_APP_API_URL=http://localhost:3001
+REACT_APP_API_URL=http://localhost:5000
 REACT_APP_API_KEY=teste123
 REACT_APP_TENANT_MODE=hybrid
 
@@ -94,13 +94,13 @@ npm run electron:dev
 
 ```bash
 # Listar todos os tenants
-curl http://localhost:3001/tenants
+curl http://localhost:5000/tenants
 
 # Buscar tenant específico
-curl http://localhost:3001/tenants/teste_online_001
+curl http://localhost:5000/tenants/teste_online_001
 
 # Via navegador
-http://localhost:3001/tenants
+http://localhost:5000/tenants
 ```
 
 ### **2. Ver logs do App:**
@@ -147,7 +147,7 @@ Se o título tiver **(ONLINE)** ou **🌐 MODO ONLINE**, funcionou!
 ### **Método 2: Via API POST**
 
 ```bash
-curl -X POST http://localhost:3001/tenants \
+curl -X POST http://localhost:5000/tenants \
   -H "Content-Type: application/json" \
   -d '{
     "tenant_id": "nova_loja_001",
@@ -159,7 +159,7 @@ curl -X POST http://localhost:3001/tenants \
 
 ### **Método 3: Via Postman/Insomnia**
 
-1. **POST** `http://localhost:3001/tenants`
+1. **POST** `http://localhost:5000/tenants`
 2. Body: JSON com a configuração
 3. Send
 
@@ -254,24 +254,24 @@ const { data } = await supabase
 npm install -g json-server
 
 # OU usar via npx
-npx json-server --watch server/db.json --port 3001
+npx json-server --watch server/db.json --port 5000
 ```
 
-### **Erro: "Porta 3001 em uso"**
+### **Erro: "Porta 5000 em uso"**
 
 ```bash
 # Usar outra porta
-json-server --watch server/db.json --port 3002
+json-server --watch server/db.json --port 5001
 
 # Atualizar .env.local
-REACT_APP_API_URL=http://localhost:3002
+REACT_APP_API_URL=http://localhost:5001
 ```
 
 ### **App não conecta ao servidor**
 
 1. **Verificar se servidor está rodando:**
    ```bash
-   curl http://localhost:3001/tenants
+   curl http://localhost:5000/tenants
    ```
 
 2. **Verificar .env.local:**
@@ -321,7 +321,7 @@ POST /tenants 201 8.123 ms - 2534
 ```
 ┌─────────────────────┐
 │ 1. Servidor Rodando │
-│ json-server:3001    │
+│ json-server:5000    │
 └──────────┬──────────┘
            │
 ┌──────────▼──────────┐
@@ -358,7 +358,7 @@ Antes de testar:
 
 - [ ] JSON Server instalado (`npm install -g json-server`)
 - [ ] Servidor rodando (`server/start-server.bat`)
-- [ ] API respondendo (`curl http://localhost:3001/tenants`)
+- [ ] API respondendo (`curl http://localhost:5000/tenants`)
 - [ ] .env.local criado na raiz
 - [ ] .env.local com URL correta
 - [ ] App rebuilded (`npm run build`)
@@ -381,7 +381,7 @@ Agora você tem:
 ```bash
 # Terminal 1: Servidor
 cd server
-json-server --watch db.json --port 3001
+json-server --watch db.json --port 5000
 
 # Terminal 2: App
 npm run electron:dev

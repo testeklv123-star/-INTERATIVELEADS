@@ -27,6 +27,19 @@ class TotemDatabase {
     this.initializeTables();
   }
 
+  safeParseJson(value, fallback = {}) {
+    if (value === null || value === undefined) {
+      return fallback;
+    }
+
+    try {
+      return JSON.parse(value);
+    } catch (error) {
+      console.error('❌ Erro ao fazer parse de JSON armazenado no SQLite:', error);
+      return fallback;
+    }
+  }
+
   initializeTables() {
     console.log('🔨 Criando tabelas do banco de dados...');
 
@@ -103,15 +116,15 @@ class TotemDatabase {
     const row = stmt.get(tenantId);
     
     if (!row) return null;
-    
+
     return {
       tenant_id: row.id,
       brand_name: row.brand_name,
-      theme: JSON.parse(row.theme),
-      content: JSON.parse(row.content),
-      games_config: JSON.parse(row.games_config),
-      form_fields: JSON.parse(row.form_fields),
-      behavior: JSON.parse(row.behavior)
+      theme: this.safeParseJson(row.theme, {}),
+      content: this.safeParseJson(row.content, {}),
+      games_config: this.safeParseJson(row.games_config, {}),
+      form_fields: this.safeParseJson(row.form_fields, []),
+      behavior: this.safeParseJson(row.behavior, {})
     };
   }
 
@@ -173,6 +186,11 @@ class TotemDatabase {
     return { id: result.lastInsertRowid, ...leadData };
   }
 
+  getLeadById(leadId) {
+    const stmt = this.db.prepare('SELECT * FROM leads WHERE id = ?');
+    return stmt.get(leadId) || null;
+  }
+
   getLeads(tenantId = null, limit = 1000) {
     let query = 'SELECT * FROM leads';
     let params = [];
@@ -203,32 +221,88 @@ class TotemDatabase {
     return result.count;
   }
 
+  updateLead(leadId, updates = {}) {
+    const allowedFields = {
+      tenant_id: (value) => value,
+      name: (value) => value,
+      email: (value) => value,
+      phone: (value) => value ?? null,
+      game_selected: (value) => value ?? null,
+      prize_won: (value) => value ?? null,
+      custom_field: (value) => value ?? null,
+      consent: (value) => (value ? 1 : 0),
+      timestamp: (value) => value
+    };
+
+    const entries = Object.entries(updates).filter(([key]) => key in allowedFields);
+
+    if (entries.length === 0) {
+      throw new Error('Nenhum campo válido informado para atualizar lead');
+    }
+
+    const setClause = entries.map(([key]) => `${key} = ?`).join(', ');
+    const values = entries.map(([key, value]) => allowedFields[key](value));
+
+    const stmt = this.db.prepare(`UPDATE leads SET ${setClause} WHERE id = ?`);
+    const result = stmt.run(...values, leadId);
+    return result.changes > 0;
+  }
+
+  deleteLead(leadId) {
+    const stmt = this.db.prepare('DELETE FROM leads WHERE id = ?');
+    const result = stmt.run(leadId);
+    return result.changes > 0;
+  }
+
   // ==================== ESTOQUE DE PRÊMIOS ====================
 
   updatePrizeInventory(tenantId, gameType, prizeId, updates) {
+    const current = this.db
+      .prepare('SELECT * FROM prizes_inventory WHERE tenant_id = ? AND id = ?')
+      .get(tenantId, prizeId);
+
+    const merged = {
+      prize_name: updates.prize_name ?? current?.prize_name,
+      quantity_total: updates.quantity_total ?? current?.quantity_total ?? 0,
+      quantity_available: updates.quantity_available ?? current?.quantity_available ?? 0,
+      times_won: updates.times_won ?? current?.times_won ?? 0
+    };
+
+    if (!merged.prize_name) {
+      throw new Error('Nome do prêmio é obrigatório para criar/atualizar inventário');
+    }
+
     const stmt = this.db.prepare(`
       INSERT OR REPLACE INTO prizes_inventory 
       (id, tenant_id, game_type, prize_name, quantity_total, quantity_available, times_won, last_updated)
       VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
     `);
-    
+
     stmt.run(
       prizeId,
       tenantId,
       gameType,
-      updates.prize_name,
-      updates.quantity_total,
-      updates.quantity_available,
-      updates.times_won || 0
+      merged.prize_name,
+      merged.quantity_total,
+      merged.quantity_available,
+      merged.times_won
     );
   }
 
-  getPrizeInventory(tenantId, gameType) {
-    const stmt = this.db.prepare(`
+  getPrizeInventory(tenantId, gameType = null) {
+    let query = `
       SELECT * FROM prizes_inventory 
-      WHERE tenant_id = ? AND game_type = ?
-    `);
-    return stmt.all(tenantId, gameType);
+      WHERE tenant_id = ?
+    `;
+    const params = [tenantId];
+
+    if (gameType) {
+      query += ' AND game_type = ?';
+      params.push(gameType);
+    }
+
+    const stmt = this.db.prepare(query);
+    return stmt.all(...params);
   }
 
   decrementPrizeStock(tenantId, prizeId) {
@@ -240,6 +314,17 @@ class TotemDatabase {
       WHERE tenant_id = ? AND id = ? AND quantity_available > 0
     `);
     
+    const result = stmt.run(tenantId, prizeId);
+    return result.changes > 0;
+  }
+
+  getPrizeById(prizeId) {
+    const stmt = this.db.prepare('SELECT * FROM prizes_inventory WHERE id = ?');
+    return stmt.get(prizeId) || null;
+  }
+
+  deletePrize(tenantId, prizeId) {
+    const stmt = this.db.prepare('DELETE FROM prizes_inventory WHERE tenant_id = ? AND id = ?');
     const result = stmt.run(tenantId, prizeId);
     return result.changes > 0;
   }
@@ -258,6 +343,17 @@ class TotemDatabase {
       VALUES (?, ?, CURRENT_TIMESTAMP)
     `);
     stmt.run(key, value);
+  }
+
+  getAllSettings() {
+    const stmt = this.db.prepare('SELECT key, value, updated_at FROM app_settings');
+    return stmt.all();
+  }
+
+  deleteSetting(key) {
+    const stmt = this.db.prepare('DELETE FROM app_settings WHERE key = ?');
+    const result = stmt.run(key);
+    return result.changes > 0;
   }
 
   // ==================== BACKUP & RESTORE ====================

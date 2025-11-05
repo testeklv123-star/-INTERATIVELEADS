@@ -9,6 +9,15 @@ export interface AuthTokens {
   refreshToken: string;
 }
 
+interface User {
+  id: number;
+  email: string;
+  role: string;
+  tenant_id: number | null;
+  is_active: boolean;
+  password_hash: string;
+}
+
 export interface AuthUser {
   id: number;
   email: string;
@@ -38,7 +47,7 @@ export class AuthService {
 
     const payload = {
       sub: String(userRecord.id),
-      tenantId: userRecord.tenant_slug,
+      tenantId: userRecord.tenant_id?.toString() ?? null,
       role: userRecord.role,
     } as const;
 
@@ -53,7 +62,7 @@ export class AuthService {
         id: userRecord.id,
         email: userRecord.email,
         role: userRecord.role,
-        tenantId: userRecord.tenant_slug,
+        tenantId: userRecord.tenant_id?.toString() ?? null,
       },
     };
   }
@@ -70,7 +79,7 @@ export class AuthService {
 
       const newPayload = {
         sub: String(userRecord.id),
-        tenantId: userRecord.tenant_slug,
+        tenantId: userRecord.tenant_id?.toString() ?? null,
         role: userRecord.role,
       } as const;
 

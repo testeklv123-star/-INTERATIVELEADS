@@ -9,14 +9,15 @@ import GameSelection from './screens/GameSelection';
 import LeadForm from './screens/LeadForm';
 import GameScreen from './screens/GameScreen';
 import ThankYouScreen from './screens/ThankYouScreen';
-import AdminLayout from './screens/admin/AdminLayout';
+import AdminProtectedLayout from './screens/admin/AdminProtectedLayout';
 import LeadsDashboard from './screens/admin/LeadsDashboard';
 import BrandCustomization from './screens/admin/BrandCustomization';
 import PrizeManagement from './screens/admin/PrizeManagement';
 import GamesConfiguration from './screens/admin/GamesConfiguration';
+import tenantService from './services/tenantService';
 
 const AppContent: React.FC = () => {
-  const { isConfigured, isLoading, tenantConfig, _hasHydrated } = useTenantStore();
+  const { isConfigured, isLoading, tenantConfig, _hasHydrated, loadTenant } = useTenantStore();
   const location = useLocation();
   
   // Ativar timeout de inatividade
@@ -39,6 +40,30 @@ const AppContent: React.FC = () => {
       applyTheme(tenantConfig.theme);
     }
   }, [tenantConfig]);
+
+  useEffect(() => {
+    const bootstrapTenant = async () => {
+      if (!isConfigured && !_hasHydrated) {
+        return;
+      }
+
+      if (isConfigured || isLoading) {
+        return;
+      }
+
+      try {
+        const tenantId = await tenantService.resolveActiveTenantId();
+        if (tenantId) {
+          console.log('🔁 [App] Tenant ativo encontrado, carregando...', tenantId);
+          await loadTenant(tenantId);
+        }
+      } catch (error) {
+        console.warn('⚠️ [App] Falha ao carregar tenant ativo:', error);
+      }
+    };
+
+    void bootstrapTenant();
+  }, [isConfigured, isLoading, _hasHydrated, loadTenant]);
 
   // Wait until the store is rehydrated from localStorage
   if (!_hasHydrated) {
@@ -71,7 +96,7 @@ const AppContent: React.FC = () => {
                 <Route path="/form" element={<LeadForm />} />
                 <Route path="/game/:gameId" element={<GameScreen />} />
                 <Route path="/thank-you" element={<ThankYouScreen />} />
-                <Route path="/admin" element={<AdminLayout />}>
+                <Route path="/admin" element={<AdminProtectedLayout />}>
                   <Route index element={<Navigate to="leads" replace />} />
                   <Route path="leads" element={<LeadsDashboard />} />
                   <Route path="brand" element={<BrandCustomization />} />

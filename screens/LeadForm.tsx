@@ -7,6 +7,7 @@ import Button from '../components/common/Button';
 import Input from '../components/common/Input';
 import { saveLead } from '../services/apiService';
 import electronService from '../services/electronService';
+import useLeadSessionStore from '../stores/leadSessionStore';
 
 type Inputs = {
   name: string;
@@ -21,6 +22,7 @@ const LeadForm: React.FC = () => {
   const location = useLocation();
   const tenantConfig = useTenantStore((state) => state.tenantConfig);
   const { register, handleSubmit, formState: { errors } } = useForm<Inputs>();
+  const startSession = useLeadSessionStore((state) => state.startSession);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!tenantConfig) return null;
@@ -30,25 +32,31 @@ const LeadForm: React.FC = () => {
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
     setIsSubmitting(true);
     const leadData = {
-        ...data,
-        tenant_id: tenantConfig.tenant_id,
-        game_selected: game,
-        timestamp: new Date().toISOString()
+      ...data,
+      tenant_id: tenantConfig.tenant_id,
+      game_selected: game,
+      timestamp: new Date().toISOString(),
+      consent: data.consent,
     };
     
     try {
         // Salvar no Electron se disponível, caso contrário usar API
+        let leadId: number | string = Date.now();
+
         if (electronService.isRunningInElectron()) {
           console.log('💾 Salvando lead no Electron...');
           const result = await electronService.saveLead(leadData);
-          if (!result.success) {
+          if (!result.success || !result.data) {
             throw new Error(result.error || 'Erro ao salvar lead');
           }
+          leadId = result.data.id ?? leadId;
           console.log('✅ Lead salvo no Electron!');
         } else {
           console.log('📡 Salvando lead na API...');
           await saveLead(leadData);
         }
+
+        startSession(leadId, leadData);
         navigate(`/game/${game}`);
     } catch(error) {
         console.error("Failed to save lead:", error);
@@ -128,6 +136,24 @@ const LeadForm: React.FC = () => {
                 />
               )}
             </div>
+          )}
+
+          {formConfig.optional.includes('email') && !formConfig.required.includes('email') && (
+            <Input
+              label="Email"
+              type="email"
+              registration={register('email')}
+              error={errors.email?.message}
+            />
+          )}
+
+          {formConfig.optional.includes('phone') && !formConfig.required.includes('phone') && (
+            <Input
+              label="Telefone"
+              type="tel"
+              registration={register('phone')}
+              error={errors.phone?.message}
+            />
           )}
 
           <div className="flex items-start">

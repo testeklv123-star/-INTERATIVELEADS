@@ -84,12 +84,12 @@ npm install -g json-server
 echo '{"tenants": []}' > db.json
 
 # Rodar servidor
-json-server --watch db.json --port 3001
+json-server --watch db.json --port 5000
 ```
 
 Depois configure:
 ```env
-REACT_APP_API_URL=http://localhost:3001
+REACT_APP_API_URL=http://localhost:5000
 ```
 
 #### **Opção B: Firebase (Gratuito)**
@@ -301,7 +301,7 @@ app.delete('/api/tenants/:id', authMiddleware, (req, res) => {
   res.json({ success: true });
 });
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 API rodando em http://localhost:${PORT}`);
 });
@@ -341,7 +341,7 @@ Crie um painel web simples para gerenciar tenants:
   </form>
 
   <script>
-    const API_URL = 'http://localhost:3001/api';
+    const API_URL = 'http://localhost:5000/api';
     const API_KEY = 'sua-chave-api';
 
     // Carregar tenants
@@ -496,12 +496,12 @@ Você tem 10 totens instalados e quer mudar a cor do tema de todos.
    ```bash
    # Usar JSON Server para testes
    npm install -g json-server
-   json-server --watch db.json --port 3001
+   json-server --watch db.json --port 5000
    ```
 
 2. **Configure o .env:**
    ```env
-   REACT_APP_API_URL=http://localhost:3001
+   REACT_APP_API_URL=http://localhost:5000
    REACT_APP_API_KEY=teste123
    ```
 

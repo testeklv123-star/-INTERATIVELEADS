@@ -114,10 +114,10 @@ Banco de dados: C:\Users\[Usuario]\AppData\Roaming\InterativeLeads\interativelea
 
 ## 🐛 Problemas Comuns
 
-### "Porta 5173 em uso"
+### "Porta 5000 em uso"
 ```bash
 # Pare o processo anterior ou use outra porta
-npm run dev -- --port 3001
+npm run dev -- --port 5001
 npm run electron:dev
 ```
 

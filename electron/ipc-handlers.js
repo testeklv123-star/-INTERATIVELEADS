@@ -85,6 +85,20 @@ function setupIpcHandlers(ipcMain, db) {
     }
   });
 
+  // Buscar lead por ID
+  ipcMain.handle('lead:get', async (event, leadId) => {
+    try {
+      const lead = db.getLeadById(leadId);
+      if (!lead) {
+        throw new Error('Lead não encontrado');
+      }
+      return { success: true, data: lead };
+    } catch (error) {
+      console.error('❌ Erro ao buscar lead:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
   // Buscar leads
   ipcMain.handle('lead:list', async (event, tenantId, limit) => {
     try {
@@ -103,6 +117,34 @@ function setupIpcHandlers(ipcMain, db) {
       return { success: true, data: count };
     } catch (error) {
       console.error('❌ Erro ao contar leads:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  // Atualizar lead
+  ipcMain.handle('lead:update', async (event, leadId, updates) => {
+    try {
+      const updated = db.updateLead(leadId, updates);
+      if (!updated) {
+        throw new Error('Lead não encontrado ou nenhum campo atualizado');
+      }
+      return { success: true };
+    } catch (error) {
+      console.error('❌ Erro ao atualizar lead:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  // Remover lead
+  ipcMain.handle('lead:delete', async (event, leadId) => {
+    try {
+      const removed = db.deleteLead(leadId);
+      if (!removed) {
+        throw new Error('Lead não encontrado');
+      }
+      return { success: true };
+    } catch (error) {
+      console.error('❌ Erro ao remover lead:', error);
       return { success: false, error: error.message };
     }
   });
@@ -141,6 +183,34 @@ function setupIpcHandlers(ipcMain, db) {
       return { success: true };
     } catch (error) {
       console.error('❌ Erro ao decrementar estoque:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  // Buscar prêmio por ID
+  ipcMain.handle('prize:get', async (event, prizeId) => {
+    try {
+      const prize = db.getPrizeById(prizeId);
+      if (!prize) {
+        throw new Error('Prêmio não encontrado');
+      }
+      return { success: true, data: prize };
+    } catch (error) {
+      console.error('❌ Erro ao buscar prêmio:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  // Remover prêmio
+  ipcMain.handle('prize:delete', async (event, tenantId, prizeId) => {
+    try {
+      const removed = db.deletePrize(tenantId, prizeId);
+      if (!removed) {
+        throw new Error('Prêmio não encontrado');
+      }
+      return { success: true };
+    } catch (error) {
+      console.error('❌ Erro ao remover prêmio:', error);
       return { success: false, error: error.message };
     }
   });
@@ -216,6 +286,31 @@ function setupIpcHandlers(ipcMain, db) {
       return { success: true };
     } catch (error) {
       console.error('❌ Erro ao salvar configuração:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  // Listar configurações
+  ipcMain.handle('settings:list', async () => {
+    try {
+      const settings = db.getAllSettings();
+      return { success: true, data: settings };
+    } catch (error) {
+      console.error('❌ Erro ao listar configurações:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  // Remover configuração
+  ipcMain.handle('settings:delete', async (event, key) => {
+    try {
+      const removed = db.deleteSetting(key);
+      if (!removed) {
+        throw new Error('Configuração não encontrada');
+      }
+      return { success: true };
+    } catch (error) {
+      console.error('❌ Erro ao remover configuração:', error);
       return { success: false, error: error.message };
     }
   });
