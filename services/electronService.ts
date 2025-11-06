@@ -5,7 +5,13 @@
  */
 
 // Type definitions para a API do Electron
-interface ElectronAPI {
+export interface ElectronAPI {
+  // Generic invoke method for IPC calls
+  invoke: (channel: string, ...args: any[]) => Promise<any>;
+  
+  // First run check
+  isFirstRun: () => Promise<boolean>;
+  
   getTenant: (tenantId: string) => Promise<{ success: boolean; data?: any; error?: string }>;
   saveTenant: (config: any) => Promise<{ success: boolean; error?: string }>;
   listTenants: () => Promise<{ success: boolean; data?: any[]; error?: string }>;
@@ -72,6 +78,23 @@ class ElectronService {
   // Verificar se está no Electron
   isRunningInElectron(): boolean {
     return this.isElectron;
+  }
+
+  // ==================== GENERIC IPC ====================
+
+  /**
+   * Generic method to invoke an IPC channel
+   * @param channel The IPC channel name
+   * @param args Arguments to pass to the IPC handler
+   */
+  async invoke(channel: string, ...args: any[]) {
+    if (!this.isElectron) {
+      throw new Error('Electron API não disponível');
+    }
+    if (!window.electronAPI?.invoke) {
+      throw new Error('IPC invoke method not available');
+    }
+    return window.electronAPI.invoke(channel, ...args);
   }
 
   // ==================== TENANTS ====================

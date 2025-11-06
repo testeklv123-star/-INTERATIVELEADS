@@ -153,6 +153,53 @@ export async function upsertTenant(config: TenantConfig): Promise<void> {
   await persistTenantToElectron(config);
 }
 
+export interface CreateTenantParams {
+  tenantId: string;
+  brandName: string;
+  adminPassword: string;
+}
+
+export interface CreateTenantResult {
+  success: boolean;
+  message?: string;
+  tenant?: TenantConfig;
+  error?: string;
+}
+
+export async function createTenant(params: CreateTenantParams): Promise<CreateTenantResult> {
+  try {
+    if (!electronService.isRunningInElectron()) {
+      throw new Error('Esta funcionalidade está disponível apenas na versão desktop do aplicativo');
+    }
+
+    const response = await electronService.invoke('create-tenant', {
+      tenantId: params.tenantId,
+      brandName: params.brandName,
+      adminPassword: params.adminPassword
+    });
+
+    if (!response.success) {
+      console.error('❌ [TenantService] Erro ao criar tenant:', response.error);
+      return {
+        success: false,
+        error: response.error || 'Erro desconhecido ao criar tenant'
+      };
+    }
+
+    return {
+      success: true,
+      message: response.message || 'Tenant criado com sucesso',
+      tenant: response.tenant
+    };
+  } catch (error) {
+    console.error('❌ [TenantService] Erro inesperado ao criar tenant:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
+    };
+  }
+}
+
 export default {
   loadTenantConfig,
   listTenants,
@@ -161,4 +208,5 @@ export default {
   resolveActiveTenantId,
   clearActiveTenantId,
   upsertTenant,
+  createTenant
 };

@@ -147,9 +147,128 @@ class TotemDatabase {
     return true;
   }
 
+  /**
+   * Cria um novo tenant no banco de dados
+   * @param {Object} tenantData - Dados do tenant a ser criado
+   * @param {string} tenantData.tenant_id - ID único do tenant
+   * @param {string} tenantData.brand_name - Nome da marca do tenant
+   * @param {string} tenantData.admin_password - Senha de administração (4 dígitos)
+   * @returns {Object} O tenant criado com todas as configurações padrão
+   * @throws {Error} Se o tenant_id já existir ou em caso de outros erros
+   */
+  createTenant({ tenant_id, brand_name, admin_password }) {
+    // Configurações padrão do tema
+    const defaultTheme = {
+      colors: {
+        primary: '#3b82f6',
+        secondary: '#10b981',
+        accent: '#8b5cf6',
+        background: '#ffffff',
+        text: '#1f2937',
+        text_secondary: '#6b7280',
+        success: '#10b981',
+        error: '#ef4444',
+        button_primary_bg: '#3b82f6',
+        button_primary_text: '#ffffff',
+        button_secondary_bg: '#e5e7eb',
+        button_secondary_text: '#1f2937',
+        main_logo_url: '',
+        center_logo_url: '',
+        watermark_url: '',
+      },
+      spacing: {
+        border_radius: '0.5rem',
+        padding_base: '1rem',
+      },
+    };
+
+    // Configuração inicial do tenant
+    const newTenant = {
+      tenant_id,
+      brand_name,
+      theme: defaultTheme,
+      content: {
+        welcome_title: `Bem-vindo ao ${brand_name}`,
+        welcome_subtitle: 'Participe e concorra a prêmios incríveis!',
+        form_title: 'Cadastre-se',
+        form_subtitle: 'Preencha seus dados para participar',
+        thank_you_message: 'Obrigado por participar!',
+        privacy_notice: 'Seus dados estão seguros conosco.',
+      },
+      games_config: {
+        enabled_games: ['prize_wheel'],
+        prize_wheel: {
+          prizes: [
+            {
+              id: 'p1',
+              label: '10% OFF',
+              name: 'Cupom de 10% de desconto',
+              probability: 100,
+              color: '#3b82f6',
+              quantity_available: 1000,
+              quantity_total: 1000,
+              times_won: 0,
+            },
+          ],
+        },
+        scratch_card: {
+          overlay_color: '#C0C0C0',
+          prizes: [],
+        },
+        quiz: {
+          questions: [],
+          prize_rules: [],
+        },
+      },
+      form_fields: {
+        required: ['name', 'email', 'phone'],
+        optional: [],
+        custom_field: { enabled: false, label: '', type: 'select', options: [] },
+      },
+      behavior: {
+        inactivity_timeout: 300,
+        auto_return_home: true,
+        show_lead_count: false,
+        collect_photo: false,
+        admin_password: admin_password,
+      },
+    };
+
+    // Iniciar transação
+    const transaction = this.db.transaction(() => {
+      // Inserir o novo tenant
+      const stmt = this.db.prepare(`
+        INSERT INTO tenants (id, brand_name, theme, content, games_config, form_fields, behavior)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `);
+      
+      stmt.run(
+        newTenant.tenant_id,
+        newTenant.brand_name,
+        JSON.stringify(newTenant.theme),
+        JSON.stringify(newTenant.content),
+        JSON.stringify(newTenant.games_config),
+        JSON.stringify(newTenant.form_fields),
+        JSON.stringify(newTenant.behavior)
+      );
+
+      // Retornar o tenant recém-criado
+      return this.getTenant(tenant_id);
+    });
+
+    // Executar a transação e retornar o resultado
+    return transaction();
+  }
+
   getAllTenants() {
     const stmt = this.db.prepare('SELECT id, brand_name, created_at FROM tenants ORDER BY created_at DESC');
     return stmt.all();
+  }
+
+  getTenantsCount() {
+    const stmt = this.db.prepare('SELECT COUNT(*) as count FROM tenants');
+    const result = stmt.get();
+    return result ? result.count : 0;
   }
 
   deleteTenant(tenantId) {

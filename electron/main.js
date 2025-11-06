@@ -10,7 +10,15 @@ let mainWindow;
 let db;
 
 // Criar janela principal
-function createWindow() {
+async function createWindow() {
+  // Inicializar banco de dados
+  db = new Database();
+  
+  // Verificar se é a primeira execução (nenhum tenant cadastrado)
+  const tenantsCount = await db.getTenantsCount();
+  const isFirstRun = tenantsCount === 0;
+  console.log(isFirstRun ? '✨ Primeira execução - Nenhum tenant cadastrado' : `🔍 Execução normal - ${tenantsCount} tenants encontrados`);
+
   // Obter tamanho da tela primária
   const primaryDisplay = screen.getPrimaryDisplay();
   const { width, height } = primaryDisplay.workAreaSize;
@@ -42,7 +50,8 @@ function createWindow() {
     console.log('✅ InterativeLeads carregado com sucesso!');
     mainWindow.webContents.send('app-ready', {
       version: app.getVersion(),
-      isDev: isDev
+      isDev: isDev,
+      isFirstRun: isFirstRun
     });
   });
 

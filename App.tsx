@@ -1,9 +1,10 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useTenantStore } from './stores/tenantStore';
 import { applyTheme } from './utils/themeApplier';
 import { useInactivityTimeout } from './hooks/useInactivityTimeout';
 import TenantSetup from './screens/TenantSetup';
+import TenantSelectionScreen from './screens/TenantSelectionScreen';
 import AttractScreen from './screens/AttractScreen';
 import GameSelection from './screens/GameSelection';
 import LeadForm from './screens/LeadForm';
@@ -15,24 +16,54 @@ import BrandCustomization from './screens/admin/BrandCustomization';
 import PrizeManagement from './screens/admin/PrizeManagement';
 import GamesConfiguration from './screens/admin/GamesConfiguration';
 import tenantService from './services/tenantService';
+import type { ElectronAPI } from './services/electronService';
+
+declare global {
+  interface Window {
+    electronAPI?: ElectronAPI;
+  }
+}
 
 const AppContent: React.FC = () => {
   const { isConfigured, isLoading, tenantConfig, _hasHydrated, loadTenant } = useTenantStore();
+  const [isFirstRun, setIsFirstRun] = useState<boolean | null>(null);
   const location = useLocation();
   
   // Ativar timeout de inatividade
   useInactivityTimeout();
 
+  // Check if it's the first run
+  useEffect(() => {
+    const checkFirstRun = async () => {
+      try {
+        if (window.electronAPI) {
+          const firstRun = await window.electronAPI.isFirstRun();
+          console.log('🚀 [App] First run check:', firstRun);
+          setIsFirstRun(firstRun);
+        } else {
+          console.warn('⚠️ [App] Electron API not available, assuming not first run');
+          setIsFirstRun(false);
+        }
+      } catch (error) {
+        console.error('❌ [App] Error checking first run:', error);
+        setIsFirstRun(false);
+      }
+    };
+
+    checkFirstRun();
+  }, []);
+
   // Debug: Log do estado
   useEffect(() => {
     console.log('🎯 [App] Estado atual:', {
+      isFirstRun,
       isConfigured,
       isLoading,
       _hasHydrated,
       hasTenantConfig: !!tenantConfig,
       brandName: tenantConfig?.brand_name
     });
-  }, [isConfigured, isLoading, tenantConfig, _hasHydrated]);
+  }, [isFirstRun, isConfigured, isLoading, tenantConfig, _hasHydrated]);
 
   useEffect(() => {
     if (tenantConfig) {
@@ -41,15 +72,41 @@ const AppContent: React.FC = () => {
     }
   }, [tenantConfig]);
 
+  // Show loading state while checking first run
+  if (isFirstRun === null) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Inicializando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show setup screen on first run
+  if (isFirstRun) {
+    return <TenantSetup />;
+  }
+
+  // Show tenant selection if not configured
+  if (!isConfigured && _hasHydrated) {
+    return <TenantSelectionScreen />;
+  }
+
+  // Show loading state while checking tenant config
+  if (isLoading || !_hasHydrated) {
+    return (
+      <div className="w-full h-screen flex justify-center items-center bg-gray-100">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  // Bootstrap tenant configuration
   useEffect(() => {
     const bootstrapTenant = async () => {
-      if (!isConfigured && !_hasHydrated) {
-        return;
-      }
-
-      if (isConfigured || isLoading) {
-        return;
-      }
+      if (isConfigured) return;
 
       try {
         const tenantId = await tenantService.resolveActiveTenantId();
@@ -63,7 +120,7 @@ const AppContent: React.FC = () => {
     };
 
     void bootstrapTenant();
-  }, [isConfigured, isLoading, _hasHydrated, loadTenant]);
+  }, [isConfigured, loadTenant]);
 
   // Wait until the store is rehydrated from localStorage
   if (!_hasHydrated) {

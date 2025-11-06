@@ -8,7 +8,146 @@ activeLeads Desktop - Sistema de Captação de Leads
 function setupIpcHandlers(ipcMain, db) {
   console.log('🔌 Configurando IPC handlers...');
 
+  // Verificar se é a primeira execução (nenhum tenant cadastrado)
+  ipcMain.handle('is-first-run', async () => {
+    try {
+      const count = await db.getTenantsCount();
+      return count === 0;
+    } catch (error) {
+      console.error('❌ Erro ao verificar primeira execução:', error);
+      return false;
+    }
+  });
+
   // ==================== TENANTS ====================
+
+  // Criar novo tenant
+  ipcMain.handle('create-tenant', async (event, tenantData) => {
+    try {
+      const { tenant_id: tenantId, brand_name: brandName, admin_password: adminPassword } = tenantData;
+      
+      console.log(`🆕 Criando novo tenant: ${tenantId} (${brandName})`);
+      
+      // Validar entrada
+      if (!tenantId || !brandName || !adminPassword) {
+        throw new Error('Todos os campos são obrigatórios');
+      }
+
+      if (adminPassword.length !== 4 || !/^\d+$/.test(adminPassword)) {
+        throw new Error('A senha deve conter exatamente 4 dígitos numéricos');
+      }
+
+      // Verificar se o tenant já existe
+      const existingTenant = db.getTenant(tenantId);
+      if (existingTenant) {
+        throw new Error('Já existe um tenant com este ID');
+      }
+
+      // Configuração padrão do tema
+      const defaultTheme = {
+        colors: {
+          primary: '#3b82f6',
+          secondary: '#10b981',
+          accent: '#8b5cf6',
+          background: '#ffffff',
+          text: '#1f2937',
+          text_secondary: '#6b7280',
+          success: '#10b981',
+          error: '#ef4444',
+          button_primary_bg: '#3b82f6',
+          button_primary_text: '#ffffff',
+          button_secondary_bg: '#e5e7eb',
+          button_secondary_text: '#1f2937',
+          main_logo_url: '',
+          center_logo_url: '',
+          watermark_url: '',
+        },
+        spacing: {
+          border_radius: '0.5rem',
+          padding_base: '1rem',
+        },
+      };
+
+      // Configuração inicial do tenant
+      const newTenant = {
+        tenant_id: tenantId,
+        brand_name: brandName,
+        theme: defaultTheme,
+        content: {
+          welcome_title: `Bem-vindo ao ${brandName}`,
+          welcome_subtitle: 'Participe e concorra a prêmios incríveis!',
+          form_title: 'Cadastre-se',
+          form_subtitle: 'Preencha seus dados para participar',
+          thank_you_message: 'Obrigado por participar!',
+          privacy_notice: 'Seus dados estão seguros conosco.',
+        },
+        games_config: {
+          enabled_games: ['prize_wheel'],
+          prize_wheel: {
+            prizes: [
+              {
+                id: 'p1',
+                label: '10% OFF',
+                name: 'Cupom de 10% de desconto',
+                probability: 100,
+                color: '#3b82f6',
+                quantity_available: 1000,
+                quantity_total: 1000,
+                times_won: 0,
+              },
+            ],
+          },
+          scratch_card: {
+            overlay_color: '#C0C0C0',
+            prizes: [],
+          },
+          quiz: {
+            questions: [],
+            prize_rules: [],
+          },
+        },
+        form_fields: {
+          required: ['name', 'email', 'phone'],
+          optional: [],
+          custom_field: { enabled: false, label: '', type: 'select', options: [] },
+        },
+        behavior: {
+          inactivity_timeout: 300,
+          auto_return_home: true,
+          show_lead_count: false,
+          collect_photo: false,
+          admin_password: adminPassword,
+        },
+      };
+
+      // Salvar o novo tenant
+      db.saveTenant(newTenant);
+      
+      console.log(`✅ Tenant criado com sucesso: ${tenantId}`);
+      return { 
+        success: true, 
+        message: 'Tenant criado com sucesso',
+        tenant: newTenant
+      };
+      
+    } catch (error) {
+      console.error('❌ Erro ao criar tenant:', error);
+      
+      // Verificar se é um erro de constraint única
+      if (error.message && (error.message.includes('UNIQUE constraint failed') || error.message.includes('Já existe um tenant'))) {
+        return { 
+          success: false, 
+          error: 'Já existe um tenant com este ID' 
+        };
+      }
+      
+      // Outros erros
+      return { 
+        success: false, 
+        error: error.message || 'Falha ao criar o tenant' 
+      };
+    }
+  });
 
   // Buscar configuração de tenant
   ipcMain.handle('tenant:get', async (event, tenantId) => {
@@ -327,6 +466,17 @@ function setupIpcHandlers(ipcMain, db) {
   ipcMain.handle('app:user-data-path', async () => {
     const { app } = require('electron');
     return { success: true, data: app.getPath('userData') };
+  });
+
+  // Verificar se é a primeira execução (nenhum tenant cadastrado)
+  ipcMain.handle('app:is-first-run', async () => {
+    try {
+      const count = db.getTenantsCount();
+      return { success: true, data: count === 0 };
+    } catch (error) {
+      console.error('❌ Erro ao verificar primeira execução:', error);
+      return { success: false, error: error.message };
+    }
   });
 
   console.log('✅ IPC handlers configurados!');

@@ -47,6 +47,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // ==================== APP INFO ====================
   getAppVersion: () => ipcRenderer.invoke('app:version'),
   getUserDataPath: () => ipcRenderer.invoke('app:user-data-path'),
+  isFirstRun: () => ipcRenderer.invoke('is-first-run'),
 
   // ==================== EVENTOS ====================
   onAppReady: (callback) => {
