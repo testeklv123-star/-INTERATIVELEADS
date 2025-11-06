@@ -1,541 +1,171 @@
-const Database = require('better-sqlite3');
+// electron/database.js
+const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const { app } = require('electron');
-const fs = require('fs');
 
-class TotemDatabase {
-  constructor() {
-    // Caminho do banco de dados no diretório de dados do usuário
-    const userDataPath = app.getPath('userData');
-    const dbPath = path.join(userDataPath, 'interativeleads.db');
-    
-    console.log('📂 Banco de dados:', dbPath);
-    
-    // Criar diretório se não existir
-    if (!fs.existsSync(userDataPath)) {
-      fs.mkdirSync(userDataPath, { recursive: true });
-    }
+// Caminho para o banco de dados no diretório de dados do usuário
+const dbPath = path.join(app.getPath('userData'), 'interativeleads.db');
 
-    // Inicializar banco de dados
-    this.db = new Database(dbPath, { verbose: console.log });
-    
-    // Otimizações de performance
-    this.db.pragma('journal_mode = WAL');
-    this.db.pragma('synchronous = NORMAL');
-    
-    // Criar tabelas
-    this.initializeTables();
+let db;
+
+// Função para inicializar o banco de dados
+function initDatabase() {
+  console.log('📂 Banco de dados:', dbPath);
+  try {
+    db = new sqlite3.Database(dbPath, (err) => {
+      if (err) {
+        console.error('❌ Erro ao conectar ao banco de dados:', err.message);
+        throw err;
+      } else {
+        console.log('✅ Conectado ao banco de dados SQLite.');
+        createTables();
+      }
+    });
+  } catch (error) {
+    console.error('❌ Erro fatal ao iniciar banco de dados:', error);
+    // Considerar fechar o aplicativo se o banco não puder ser inicializado
+    // app.quit();
   }
+}
 
-  safeParseJson(value, fallback = {}) {
-    if (value === null || value === undefined) {
-      return fallback;
-    }
+// Função para criar as tabelas (VERSÃO AUTOLIMPANTE)
+function createTables() {
+  console.log('🔍 Verificando e recriando tabelas para garantir a estrutura correta...');
 
-    try {
-      return JSON.parse(value);
-    } catch (error) {
-      console.error('❌ Erro ao fazer parse de JSON armazenado no SQLite:', error);
-      return fallback;
-    }
-  }
+  db.serialize(() => {
+    // 1. APAGA as tabelas antigas para garantir um começo limpo
+    db.run(`DROP TABLE IF EXISTS leads`, (err) => {
+      if (err) console.error('❌ Erro ao apagar a tabela leads:', err.message);
+    });
 
-  initializeTables() {
-    console.log('🔨 Criando tabelas do banco de dados...');
+    db.run(`DROP TABLE IF EXISTS prizes_inventory`, (err) => {
+      if (err) console.error('❌ Erro ao apagar a tabela prizes_inventory:', err.message);
+    });
 
-    // Tabela de Tenants
-    this.db.exec(`
-      CREATE TABLE IF NOT EXISTS tenants (
-        id TEXT PRIMARY KEY,
+    db.run(`DROP TABLE IF EXISTS app_settings`, (err) => {
+      if (err) console.error('❌ Erro ao apagar a tabela app_settings:', err.message);
+    });
+
+    db.run(`DROP TABLE IF EXISTS tenants`, (err) => {
+      if (err) console.error('❌ Erro ao apagar a tabela tenants:', err.message);
+    });
+
+    // 2. CRIA as tabelas com a estrutura CORRETA e ATUALIZADA
+    const tables = [
+      `CREATE TABLE tenants (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        tenant_id TEXT UNIQUE NOT NULL,
         brand_name TEXT NOT NULL,
+        admin_password TEXT NOT NULL,
         theme TEXT NOT NULL,
-        content TEXT NOT NULL,
         games_config TEXT NOT NULL,
-        form_fields TEXT NOT NULL,
-        behavior TEXT NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-
-    // Tabela de Leads
-    this.db.exec(`
-      CREATE TABLE IF NOT EXISTS leads (
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`,
+      `CREATE TABLE leads (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         tenant_id TEXT NOT NULL,
         name TEXT NOT NULL,
         email TEXT NOT NULL,
         phone TEXT,
-        game_selected TEXT,
+        game_played TEXT NOT NULL,
         prize_won TEXT,
-        custom_field TEXT,
-        consent INTEGER DEFAULT 1,
-        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (tenant_id) REFERENCES tenants(id)
-      )
-    `);
-
-    // Tabela de Estoque de Prêmios
-    this.db.exec(`
-      CREATE TABLE IF NOT EXISTS prizes_inventory (
-        id TEXT PRIMARY KEY,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (tenant_id) REFERENCES tenants (tenant_id)
+      )`,
+      `CREATE TABLE prizes_inventory (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         tenant_id TEXT NOT NULL,
-        game_type TEXT NOT NULL,
         prize_name TEXT NOT NULL,
-        quantity_total INTEGER DEFAULT 0,
-        quantity_available INTEGER DEFAULT 0,
-        times_won INTEGER DEFAULT 0,
-        last_updated DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (tenant_id) REFERENCES tenants(id)
-      )
-    `);
-
-    // Tabela de Configurações do App
-    this.db.exec(`
-      CREATE TABLE IF NOT EXISTS app_settings (
+        total_quantity INTEGER NOT NULL,
+        available_quantity INTEGER NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (tenant_id) REFERENCES tenants (tenant_id)
+      )`,
+      `CREATE TABLE app_settings (
         key TEXT PRIMARY KEY,
-        value TEXT NOT NULL,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
+        value TEXT NOT NULL
+      )`
+    ];
 
-    // Índices para performance
-    this.db.exec(`
-      CREATE INDEX IF NOT EXISTS idx_leads_tenant ON leads(tenant_id);
-      CREATE INDEX IF NOT EXISTS idx_leads_timestamp ON leads(timestamp);
-      CREATE INDEX IF NOT EXISTS idx_prizes_tenant ON prizes_inventory(tenant_id);
-    `);
+    // Cria as tabelas sequencialmente
+    let tableIndex = 0;
+    const createNextTable = () => {
+      if (tableIndex >= tables.length) {
+        // Todas as tabelas foram criadas, agora insere o tenant padrão
+        insertDefaultTenant();
+        return;
+      }
 
-    console.log('✅ Tabelas criadas com sucesso!');
-  }
-
-  // ==================== TENANTS ====================
-
-  getTenant(tenantId) {
-    const stmt = this.db.prepare('SELECT * FROM tenants WHERE id = ?');
-    const row = stmt.get(tenantId);
-    
-    if (!row) return null;
-
-    return {
-      tenant_id: row.id,
-      brand_name: row.brand_name,
-      theme: this.safeParseJson(row.theme, {}),
-      content: this.safeParseJson(row.content, {}),
-      games_config: this.safeParseJson(row.games_config, {}),
-      form_fields: this.safeParseJson(row.form_fields, []),
-      behavior: this.safeParseJson(row.behavior, {})
+      db.run(tables[tableIndex], (err) => {
+        if (err) {
+          console.error('❌ Erro ao criar tabela:', err.message);
+        } else {
+          console.log('✅ Tabela criada com sucesso.');
+        }
+        tableIndex++;
+        createNextTable();
+      });
     };
-  }
 
-  saveTenant(config) {
-    const stmt = this.db.prepare(`
-      INSERT OR REPLACE INTO tenants (id, brand_name, theme, content, games_config, form_fields, behavior, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-    `);
-    
-    stmt.run(
-      config.tenant_id,
-      config.brand_name,
-      JSON.stringify(config.theme),
-      JSON.stringify(config.content),
-      JSON.stringify(config.games_config),
-      JSON.stringify(config.form_fields),
-      JSON.stringify(config.behavior)
-    );
-    
-    return true;
-  }
+    createNextTable();
+  });
+}
 
-  /**
-   * Cria um novo tenant no banco de dados
-   * @param {Object} tenantData - Dados do tenant a ser criado
-   * @param {string} tenantData.tenant_id - ID único do tenant
-   * @param {string} tenantData.brand_name - Nome da marca do tenant
-   * @param {string} tenantData.admin_password - Senha de administração (4 dígitos)
-   * @returns {Object} O tenant criado com todas as configurações padrão
-   * @throws {Error} Se o tenant_id já existir ou em caso de outros erros
-   */
-  createTenant({ tenant_id, brand_name, admin_password }) {
-    // Configurações padrão do tema
-    const defaultTheme = {
+// Função para inserir um tenant padrão (se não existir nenhum)
+function insertDefaultTenant() {
+  console.log('📝 Inserindo tenant padrão...');
+  const defaultTenant = {
+    tenant_id: 'loja_tech_sp_001',
+    brand_name: 'Tech Store SP',
+    admin_password: '1234', // Em um app real, isso seria um hash
+    theme: JSON.stringify({
       colors: {
         primary: '#3b82f6',
         secondary: '#10b981',
-        accent: '#8b5cf6',
-        background: '#ffffff',
-        text: '#1f2937',
-        text_secondary: '#6b7280',
-        success: '#10b981',
-        error: '#ef4444',
-        button_primary_bg: '#3b82f6',
-        button_primary_text: '#ffffff',
-        button_secondary_bg: '#e5e7eb',
-        button_secondary_text: '#1f2937',
-        main_logo_url: '',
-        center_logo_url: '',
-        watermark_url: '',
+        background: '#f3f4f6',
+        text: '#111827',
       },
-      spacing: {
-        border_radius: '0.5rem',
-        padding_base: '1rem',
+      logos: {
+        main: '/assets/logo-placeholder.png',
+        favicon: '/assets/favicon.ico',
       },
-    };
+    }),
+    games_config: JSON.stringify({
+      wheel: { enabled: true, prizes: ['10% OFF', 'Brinde', 'Tente Novamente'] },
+      scratch: { enabled: true, prizes: ['Ganhou', 'Tente Novamente'] },
+      quiz: { enabled: true, questions: [] },
+    }),
+  };
 
-    // Configuração inicial do tenant
-    const newTenant = {
-      tenant_id,
-      brand_name,
-      theme: defaultTheme,
-      content: {
-        welcome_title: `Bem-vindo ao ${brand_name}`,
-        welcome_subtitle: 'Participe e concorra a prêmios incríveis!',
-        form_title: 'Cadastre-se',
-        form_subtitle: 'Preencha seus dados para participar',
-        thank_you_message: 'Obrigado por participar!',
-        privacy_notice: 'Seus dados estão seguros conosco.',
-      },
-      games_config: {
-        enabled_games: ['prize_wheel'],
-        prize_wheel: {
-          prizes: [
-            {
-              id: 'p1',
-              label: '10% OFF',
-              name: 'Cupom de 10% de desconto',
-              probability: 100,
-              color: '#3b82f6',
-              quantity_available: 1000,
-              quantity_total: 1000,
-              times_won: 0,
-            },
-          ],
-        },
-        scratch_card: {
-          overlay_color: '#C0C0C0',
-          prizes: [],
-        },
-        quiz: {
-          questions: [],
-          prize_rules: [],
-        },
-      },
-      form_fields: {
-        required: ['name', 'email', 'phone'],
-        optional: [],
-        custom_field: { enabled: false, label: '', type: 'select', options: [] },
-      },
-      behavior: {
-        inactivity_timeout: 300,
-        auto_return_home: true,
-        show_lead_count: false,
-        collect_photo: false,
-        admin_password: admin_password,
-      },
-    };
-
-    // Iniciar transação
-    const transaction = this.db.transaction(() => {
-      // Inserir o novo tenant
-      const stmt = this.db.prepare(`
-        INSERT INTO tenants (id, brand_name, theme, content, games_config, form_fields, behavior)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-      `);
-      
-      stmt.run(
-        newTenant.tenant_id,
-        newTenant.brand_name,
-        JSON.stringify(newTenant.theme),
-        JSON.stringify(newTenant.content),
-        JSON.stringify(newTenant.games_config),
-        JSON.stringify(newTenant.form_fields),
-        JSON.stringify(newTenant.behavior)
-      );
-
-      // Retornar o tenant recém-criado
-      return this.getTenant(tenant_id);
-    });
-
-    // Executar a transação e retornar o resultado
-    return transaction();
-  }
-
-  getAllTenants() {
-    const stmt = this.db.prepare('SELECT id, brand_name, created_at FROM tenants ORDER BY created_at DESC');
-    return stmt.all();
-  }
-
-  getTenantsCount() {
-    const stmt = this.db.prepare('SELECT COUNT(*) as count FROM tenants');
-    const result = stmt.get();
-    return result ? result.count : 0;
-  }
-
-  deleteTenant(tenantId) {
-    const stmt = this.db.prepare('DELETE FROM tenants WHERE id = ?');
-    stmt.run(tenantId);
-    
-    // Deletar leads relacionados
-    const stmtLeads = this.db.prepare('DELETE FROM leads WHERE tenant_id = ?');
-    stmtLeads.run(tenantId);
-    
-    return true;
-  }
-
-  // ==================== LEADS ====================
-
-  saveLead(leadData) {
-    const stmt = this.db.prepare(`
-      INSERT INTO leads (tenant_id, name, email, phone, game_selected, prize_won, custom_field, consent, timestamp)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-    
-    const result = stmt.run(
-      leadData.tenant_id,
-      leadData.name,
-      leadData.email,
-      leadData.phone || null,
-      leadData.game_selected || null,
-      leadData.prize_won || null,
-      leadData.custom_field || null,
-      leadData.consent ? 1 : 0,
-      leadData.timestamp || new Date().toISOString()
-    );
-    
-    return { id: result.lastInsertRowid, ...leadData };
-  }
-
-  getLeadById(leadId) {
-    const stmt = this.db.prepare('SELECT * FROM leads WHERE id = ?');
-    return stmt.get(leadId) || null;
-  }
-
-  getLeads(tenantId = null, limit = 1000) {
-    let query = 'SELECT * FROM leads';
-    let params = [];
-    
-    if (tenantId) {
-      query += ' WHERE tenant_id = ?';
-      params.push(tenantId);
+  const sql = `INSERT INTO tenants (tenant_id, brand_name, admin_password, theme, games_config) VALUES (?, ?, ?, ?, ?)`;
+  db.run(sql, [
+    defaultTenant.tenant_id,
+    defaultTenant.brand_name,
+    defaultTenant.admin_password,
+    defaultTenant.theme,
+    defaultTenant.games_config
+  ], function(err) {
+    if (err) {
+      console.error('❌ Erro ao inserir tenant padrão:', err.message);
+      console.error('❌ Detalhes do erro:', err);
+    } else {
+      console.log(`🎉 Tenant padrão inserido com sucesso. ID: ${this.lastID}, Linhas afetadas: ${this.changes}`);
+      // Verificar se realmente foi inserido
+      db.get('SELECT * FROM tenants WHERE tenant_id = ?', [defaultTenant.tenant_id], (err, row) => {
+        if (err) {
+          console.error('❌ Erro ao verificar tenant inserido:', err.message);
+        } else if (row) {
+          console.log('✅ Tenant confirmado no banco:', row);
+        } else {
+          console.warn('⚠️ Tenant não encontrado após inserção!');
+        }
+      });
     }
-    
-    query += ' ORDER BY timestamp DESC LIMIT ?';
-    params.push(limit);
-    
-    const stmt = this.db.prepare(query);
-    return stmt.all(...params);
-  }
-
-  getLeadsCount(tenantId = null) {
-    let query = 'SELECT COUNT(*) as count FROM leads';
-    let params = [];
-    
-    if (tenantId) {
-      query += ' WHERE tenant_id = ?';
-      params.push(tenantId);
-    }
-    
-    const stmt = this.db.prepare(query);
-    const result = stmt.get(...params);
-    return result.count;
-  }
-
-  updateLead(leadId, updates = {}) {
-    const allowedFields = {
-      tenant_id: (value) => value,
-      name: (value) => value,
-      email: (value) => value,
-      phone: (value) => value ?? null,
-      game_selected: (value) => value ?? null,
-      prize_won: (value) => value ?? null,
-      custom_field: (value) => value ?? null,
-      consent: (value) => (value ? 1 : 0),
-      timestamp: (value) => value
-    };
-
-    const entries = Object.entries(updates).filter(([key]) => key in allowedFields);
-
-    if (entries.length === 0) {
-      throw new Error('Nenhum campo válido informado para atualizar lead');
-    }
-
-    const setClause = entries.map(([key]) => `${key} = ?`).join(', ');
-    const values = entries.map(([key, value]) => allowedFields[key](value));
-
-    const stmt = this.db.prepare(`UPDATE leads SET ${setClause} WHERE id = ?`);
-    const result = stmt.run(...values, leadId);
-    return result.changes > 0;
-  }
-
-  deleteLead(leadId) {
-    const stmt = this.db.prepare('DELETE FROM leads WHERE id = ?');
-    const result = stmt.run(leadId);
-    return result.changes > 0;
-  }
-
-  // ==================== ESTOQUE DE PRÊMIOS ====================
-
-  updatePrizeInventory(tenantId, gameType, prizeId, updates) {
-    const current = this.db
-      .prepare('SELECT * FROM prizes_inventory WHERE tenant_id = ? AND id = ?')
-      .get(tenantId, prizeId);
-
-    const merged = {
-      prize_name: updates.prize_name ?? current?.prize_name,
-      quantity_total: updates.quantity_total ?? current?.quantity_total ?? 0,
-      quantity_available: updates.quantity_available ?? current?.quantity_available ?? 0,
-      times_won: updates.times_won ?? current?.times_won ?? 0
-    };
-
-    if (!merged.prize_name) {
-      throw new Error('Nome do prêmio é obrigatório para criar/atualizar inventário');
-    }
-
-    const stmt = this.db.prepare(`
-      INSERT OR REPLACE INTO prizes_inventory 
-      (id, tenant_id, game_type, prize_name, quantity_total, quantity_available, times_won, last_updated)
-      VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-    `);
-
-    stmt.run(
-      prizeId,
-      tenantId,
-      gameType,
-      merged.prize_name,
-      merged.quantity_total,
-      merged.quantity_available,
-      merged.times_won
-    );
-  }
-
-  getPrizeInventory(tenantId, gameType = null) {
-    let query = `
-      SELECT * FROM prizes_inventory 
-      WHERE tenant_id = ?
-    `;
-    const params = [tenantId];
-
-    if (gameType) {
-      query += ' AND game_type = ?';
-      params.push(gameType);
-    }
-
-    const stmt = this.db.prepare(query);
-    return stmt.all(...params);
-  }
-
-  decrementPrizeStock(tenantId, prizeId) {
-    const stmt = this.db.prepare(`
-      UPDATE prizes_inventory 
-      SET quantity_available = quantity_available - 1,
-          times_won = times_won + 1,
-          last_updated = CURRENT_TIMESTAMP
-      WHERE tenant_id = ? AND id = ? AND quantity_available > 0
-    `);
-    
-    const result = stmt.run(tenantId, prizeId);
-    return result.changes > 0;
-  }
-
-  getPrizeById(prizeId) {
-    const stmt = this.db.prepare('SELECT * FROM prizes_inventory WHERE id = ?');
-    return stmt.get(prizeId) || null;
-  }
-
-  deletePrize(tenantId, prizeId) {
-    const stmt = this.db.prepare('DELETE FROM prizes_inventory WHERE tenant_id = ? AND id = ?');
-    const result = stmt.run(tenantId, prizeId);
-    return result.changes > 0;
-  }
-
-  // ==================== CONFIGURAÇÕES DO APP ====================
-
-  getSetting(key) {
-    const stmt = this.db.prepare('SELECT value FROM app_settings WHERE key = ?');
-    const result = stmt.get(key);
-    return result ? result.value : null;
-  }
-
-  setSetting(key, value) {
-    const stmt = this.db.prepare(`
-      INSERT OR REPLACE INTO app_settings (key, value, updated_at)
-      VALUES (?, ?, CURRENT_TIMESTAMP)
-    `);
-    stmt.run(key, value);
-  }
-
-  getAllSettings() {
-    const stmt = this.db.prepare('SELECT key, value, updated_at FROM app_settings');
-    return stmt.all();
-  }
-
-  deleteSetting(key) {
-    const stmt = this.db.prepare('DELETE FROM app_settings WHERE key = ?');
-    const result = stmt.run(key);
-    return result.changes > 0;
-  }
-
-  // ==================== BACKUP & RESTORE ====================
-
-  backup(backupPath) {
-    return this.db.backup(backupPath);
-  }
-
-  exportToJSON() {
-    const tenants = this.db.prepare('SELECT * FROM tenants').all();
-    const leads = this.db.prepare('SELECT * FROM leads').all();
-    const prizes = this.db.prepare('SELECT * FROM prizes_inventory').all();
-    
-    return {
-      version: '1.0',
-      exported_at: new Date().toISOString(),
-      data: {
-        tenants,
-        leads,
-        prizes
-      }
-    };
-  }
-
-  // ==================== ESTATÍSTICAS ====================
-
-  getStats(tenantId) {
-    const totalLeads = this.db.prepare('SELECT COUNT(*) as count FROM leads WHERE tenant_id = ?').get(tenantId).count;
-    
-    const leadsToday = this.db.prepare(`
-      SELECT COUNT(*) as count FROM leads 
-      WHERE tenant_id = ? AND DATE(timestamp) = DATE('now')
-    `).get(tenantId).count;
-    
-    const gameStats = this.db.prepare(`
-      SELECT game_selected, COUNT(*) as count 
-      FROM leads 
-      WHERE tenant_id = ? AND game_selected IS NOT NULL
-      GROUP BY game_selected
-      ORDER BY count DESC
-    `).all(tenantId);
-    
-    return {
-      total_leads: totalLeads,
-      leads_today: leadsToday,
-      games: gameStats
-    };
-  }
-
-  // ==================== UTILITÁRIOS ====================
-
-  close() {
-    if (this.db) {
-      this.db.close();
-      console.log('✅ Banco de dados fechado');
-    }
-  }
-
-  vacuum() {
-    this.db.exec('VACUUM');
-    console.log('✅ Banco de dados otimizado');
-  }
+  });
 }
 
-module.exports = TotemDatabase;
-
+// Exporta a instância do banco de dados e a função de inicialização
+module.exports = {
+  initDatabase,
+  getDb: () => db
+};

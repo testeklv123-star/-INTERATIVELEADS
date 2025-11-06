@@ -88,16 +88,27 @@ export async function loadTenantConfig(tenantId: string): Promise<TenantConfig> 
 }
 
 export async function listTenants(): Promise<TenantSummary[]> {
+  console.log('🔍 [TenantService] listTenants chamado');
   if (!electronService.isRunningInElectron()) {
+    console.warn('⚠️ [TenantService] Não está rodando no Electron');
     return [];
   }
 
-  const response = await electronService.listTenants();
-  if (!response.success) {
-    throw new Error(response.error ?? 'Erro ao listar tenants');
-  }
+  try {
+    const response = await electronService.listTenants();
+    console.log('📦 [TenantService] Resposta do electronService:', response);
+    if (!response.success) {
+      console.error('❌ [TenantService] Erro na resposta:', response.error);
+      throw new Error(response.error ?? 'Erro ao listar tenants');
+    }
 
-  return response.data as TenantSummary[];
+    const tenants = response.data as TenantSummary[] || [];
+    console.log(`✅ [TenantService] Retornando ${tenants.length} tenant(s):`, tenants);
+    return tenants;
+  } catch (error) {
+    console.error('❌ [TenantService] Erro ao listar tenants:', error);
+    throw error;
+  }
 }
 
 export async function deleteTenant(tenantId: string): Promise<void> {

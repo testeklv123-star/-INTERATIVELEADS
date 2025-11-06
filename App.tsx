@@ -16,6 +16,7 @@ import BrandCustomization from './screens/admin/BrandCustomization';
 import PrizeManagement from './screens/admin/PrizeManagement';
 import GamesConfiguration from './screens/admin/GamesConfiguration';
 import tenantService from './services/tenantService';
+import electronService from './services/electronService';
 import type { ElectronAPI } from './services/electronService';
 
 declare global {
@@ -36,8 +37,8 @@ const AppContent: React.FC = () => {
   useEffect(() => {
     const checkFirstRun = async () => {
       try {
-        if (window.electronAPI) {
-          const firstRun = await window.electronAPI.isFirstRun();
+        if (electronService.isRunningInElectron()) {
+          const firstRun = await electronService.isFirstRun();
           console.log('🚀 [App] First run check:', firstRun);
           setIsFirstRun(firstRun);
         } else {

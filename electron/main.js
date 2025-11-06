@@ -1,123 +1,64 @@
-const { app, BrowserWindow, ipcMain, screen } = require('electron');
+// electron/main.js
+const { app, BrowserWindow, globalShortcut } = require('electron');
 const path = require('path');
-const isDev = process.env.NODE_ENV === 'development';
+const { initDatabase } = require('./database'); // Importa a função de inicialização do DB
 
-// Importar módulos do Electron
-const Database = require('./database');
-const { setupIpcHandlers } = require('./ipc-handlers');
-
+// Mantém uma referência global para o objeto da janela
 let mainWindow;
-let db;
 
-// Criar janela principal
-async function createWindow() {
-  // Inicializar banco de dados
-  db = new Database();
-  
-  // Verificar se é a primeira execução (nenhum tenant cadastrado)
-  const tenantsCount = await db.getTenantsCount();
-  const isFirstRun = tenantsCount === 0;
-  console.log(isFirstRun ? '✨ Primeira execução - Nenhum tenant cadastrado' : `🔍 Execução normal - ${tenantsCount} tenants encontrados`);
-
-  // Obter tamanho da tela primária
-  const primaryDisplay = screen.getPrimaryDisplay();
-  const { width, height } = primaryDisplay.workAreaSize;
-
+function createWindow() {
+  // Cria a janela do navegador
   mainWindow = new BrowserWindow({
-    width: isDev ? 1400 : width,
-    height: isDev ? 900 : height,
-    fullscreen: !isDev, // Tela cheia em produção
-    autoHideMenuBar: true, // Esconder menu
-    frame: !isDev, // Sem bordas em produção
-    icon: path.join(__dirname, '../build/icon.ico'),
+    width: 1920,
+    height: 1080,
     webPreferences: {
+      // A pasta de preload é a pasta 'electron'
+      preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
       contextIsolation: true,
-      preload: path.join(__dirname, 'preload.js')
-    }
+    },
+    // TODO: Mudar para kiosk: true mais tarde
+    fullscreen: true,
+    autoHideMenuBar: true,
   });
 
-  // Carregar app
-  if (isDev) {
-    mainWindow.loadURL('http://localhost:5000');
-    mainWindow.webContents.openDevTools();
-  } else {
-    mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
-  }
+  // Carrega o aplicativo a partir do servidor de desenvolvimento
+  mainWindow.loadURL('http://localhost:5000');
 
-  // Log de eventos
-  mainWindow.webContents.on('did-finish-load', () => {
-    console.log('✅ InterativeLeads carregado com sucesso!');
-    mainWindow.webContents.send('app-ready', {
-      version: app.getVersion(),
-      isDev: isDev,
-      isFirstRun: isFirstRun
-    });
-  });
-
-  mainWindow.on('closed', () => {
-    mainWindow = null;
-  });
+  // Abre o DevTools em modo de desenvolvimento
+  // mainWindow.webContents.openDevTools();
 }
 
-// Inicializar aplicação
+// Este método será chamado quando o Electron terminar a inicialização
+// e estiver pronto para criar janelas do navegador.
+// Algumas APIs podem ser usadas apenas depois que este evento ocorre.
 app.whenReady().then(() => {
-  console.log('🚀 InterativeLeads iniciando...');
-  
-  // Inicializar banco de dados
-  try {
-    db = new Database();
-    console.log('✅ Banco de dados SQLite iniciado');
-  } catch (error) {
-    console.error('❌ Erro ao iniciar banco de dados:', error);
-  }
+  // 1. Inicializa o banco de dados PRIMEIRO
+  initDatabase();
 
-  // Configurar IPC handlers
-  setupIpcHandlers(ipcMain, db);
+  // 2. Importa os handlers de IPC (isso os executa e os registra)
+  require('./ipc-handlers');
 
-  // Criar janela
+  // 3. Cria a janela principal
   createWindow();
 
-  // Reabrir janela ao clicar no ícone (macOS)
   app.on('activate', () => {
+    // No macOS, é comum recriar uma janela no aplicativo quando o
+    // ícone do dock é clicado e não há outras janelas abertas.
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow();
     }
   });
 });
 
-// Fechar app quando todas as janelas forem fechadas
+// Sai quando todas as janelas estiverem fechadas, exceto no macOS.
+// É comum para aplicativos e sua barra de menu permanecerem ativos
+// até que o usuário saia explicitamente com Cmd + Q.
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
-    if (db) {
-      db.close();
-    }
     app.quit();
   }
 });
 
-// Otimizações
-app.commandLine.appendSwitch('disable-features', 'OutOfBlinkCors');
-app.commandLine.appendSwitch('disable-site-isolation-trials');
-
-// Log de informações
-console.log(`
-╔════════════════════════════════════════════╗
-║      🎮 INTERATIVELEADS Desktop v1.0       ║
-║   Sistema de Captação de Leads Interativo  ║
-╚════════════════════════════════════════════╝
-
-📂 App Path: ${app.getAppPath()}
-💾 User Data: ${app.getPath('userData')}
-🔧 Mode: ${isDev ? 'Development' : 'Production'}
-`);
-
-// Tratamento de erros não capturados
-process.on('uncaughtException', (error) => {
-  console.error('❌ Uncaught Exception:', error);
-});
-
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
-});
-
+// Neste arquivo, você pode incluir o resto do código específico do seu processo principal
+// Você também pode colocá-los em arquivos separados e solicitá-los aqui.

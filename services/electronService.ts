@@ -97,6 +97,20 @@ class ElectronService {
     return window.electronAPI.invoke(channel, ...args);
   }
 
+  // ==================== FIRST RUN CHECK ====================
+
+  async isFirstRun() {
+    if (!this.isElectron) {
+      return false;
+    }
+    try {
+      return await this.invoke('is-first-run');
+    } catch (error) {
+      console.error('❌ [ElectronService] Erro ao verificar primeira execução:', error);
+      return false;
+    }
+  }
+
   // ==================== TENANTS ====================
 
   async getTenant(tenantId: string) {
@@ -104,21 +118,21 @@ class ElectronService {
       // Fallback para API web (implementar depois)
       throw new Error('Electron API não disponível');
     }
-    return window.electronAPI!.getTenant(tenantId);
+    return this.invoke('get-tenant', tenantId);
   }
 
   async saveTenant(config: any) {
     if (!this.isElectron) {
       throw new Error('Electron API não disponível');
     }
-    return window.electronAPI!.saveTenant(config);
+    return this.invoke('save-tenant', config);
   }
 
   async listTenants() {
     if (!this.isElectron) {
       throw new Error('Electron API não disponível');
     }
-    return window.electronAPI!.listTenants();
+    return this.invoke('get-all-tenants');
   }
 
   async deleteTenant(tenantId: string) {
