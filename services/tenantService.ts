@@ -55,34 +55,52 @@ async function loadTenantFromFallback(tenantId: string): Promise<TenantConfig | 
 }
 
 export async function loadTenantConfig(tenantId: string): Promise<TenantConfig> {
+  console.log('🔍 [TenantService] loadTenantConfig chamado para:', tenantId);
+  
   const trimmedId = tenantId.trim();
   if (!trimmedId) {
     throw new Error('Tenant ID inválido');
   }
 
   // 1) Banco local (Electron)
+  console.log('📂 [TenantService] Tentando carregar do Electron...');
   const localConfig = await loadTenantFromElectron(trimmedId);
   if (localConfig) {
+    console.log('✅ [TenantService] Tenant carregado do Electron:', localConfig.brand_name);
+    console.log('🔍 [TenantService] Validando estrutura:', {
+      hasTheme: !!localConfig.theme,
+      hasContent: !!localConfig.content,
+      hasGamesConfig: !!localConfig.games_config,
+      hasFormFields: !!localConfig.form_fields,
+      hasBehavior: !!localConfig.behavior
+    });
     return localConfig;
   }
+  console.log('⚠️ [TenantService] Tenant não encontrado no Electron');
 
   // 2) API online
+  console.log('🌐 [TenantService] Tentando carregar da API online...');
   const onlineConfig = await resolveTenantFromOnline(trimmedId);
   if (onlineConfig) {
+    console.log('✅ [TenantService] Tenant carregado da API');
     await persistTenantToElectron(onlineConfig).catch((error) => {
       console.warn('⚠️ [TenantService] Falha ao persistir tenant carregado da API:', error);
     });
     return onlineConfig;
   }
+  console.log('⚠️ [TenantService] Tenant não encontrado na API');
 
   // 3) Fallback local (mock / bundle)
+  console.log('📦 [TenantService] Tentando carregar do fallback...');
   const fallbackConfig = await loadTenantFromFallback(trimmedId);
   if (fallbackConfig) {
+    console.log('✅ [TenantService] Tenant carregado do fallback');
     await persistTenantToElectron(fallbackConfig).catch((error) => {
       console.warn('⚠️ [TenantService] Falha ao persistir tenant de fallback:', error);
     });
     return fallbackConfig;
   }
+  console.log('❌ [TenantService] Tenant não encontrado em lugar nenhum');
 
   throw new Error('Tenant não encontrado');
 }

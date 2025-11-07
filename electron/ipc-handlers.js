@@ -2,67 +2,27 @@
 const { ipcMain } = require('electron');
 const { getDb } = require('./database');
 
-// Função auxiliar para verificar se o banco está pronto
-function ensureDbReady() {
-  const db = getDb();
-  if (!db) {
-    throw new Error('Banco de dados não está inicializado. Aguarde a inicialização.');
-  }
-  return db;
-}
-
-// Função auxiliar para executar queries com Promise
-function runQuery(sql, params = []) {
-  return new Promise((resolve, reject) => {
-    try {
-      const db = ensureDbReady();
-      db.run(sql, params, function(err) {
-        if (err) {
-          reject(err);
-        } else {
-          resolve({ id: this.lastID, changes: this.changes });
-        }
-      });
-    } catch (error) {
-      reject(error);
-    }
+// Helpers para Promises
+const runQuery = (sql, params = []) => new Promise((resolve, reject) => {
+  getDb().run(sql, params, function(err) {
+    if (err) reject(err);
+    else resolve({ id: this.lastID, changes: this.changes });
   });
-}
+});
 
-function getQuery(sql, params = []) {
-  return new Promise((resolve, reject) => {
-    try {
-      const db = ensureDbReady();
-      db.get(sql, params, (err, row) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(row);
-        }
-      });
-    } catch (error) {
-      reject(error);
-    }
+const getQuery = (sql, params = []) => new Promise((resolve, reject) => {
+  getDb().get(sql, params, (err, row) => {
+    if (err) reject(err);
+    else resolve(row);
   });
-}
+});
 
-function allQuery(sql, params = []) {
-  return new Promise((resolve, reject) => {
-    try {
-      const db = ensureDbReady();
-      db.all(sql, params, (err, rows) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(rows || []); // Garantir que sempre retorne um array
-        }
-      });
-    } catch (error) {
-      reject(error);
-    }
+const allQuery = (sql, params = []) => new Promise((resolve, reject) => {
+  getDb().all(sql, params, (err, rows) => {
+    if (err) reject(err);
+    else resolve(rows || []);
   });
-}
-
+});
 
 // Handler para verificar se é a primeira execução
 ipcMain.handle('is-first-run', async () => {
@@ -71,55 +31,73 @@ ipcMain.handle('is-first-run', async () => {
     return count.count === 0;
   } catch (error) {
     console.error('Erro ao verificar primeira execução:', error);
-    return false; // Em caso de erro, assuma que não é a primeira execução
+    return false;
   }
 });
 
 // Handler para obter todos os tenants
 ipcMain.handle('get-all-tenants', async () => {
-  console.log('🔍 [IPC] get-all-tenants chamado');
+  console.log('🔍 [BACKEND] get-all-tenants chamado - iniciando busca...');
   try {
+    // Verifica se o banco está disponível
+    const db = getDb();
+    if (!db) {
+      console.error('❌ [BACKEND] Banco de dados não está disponível!');
+      return { success: false, error: 'Database not ready' };
+    }
+    
+    console.log('✅ [BACKEND] Banco de dados disponível, executando query...');
     const tenants = await allQuery('SELECT * FROM tenants');
-    console.log(`✅ [IPC] get-all-tenants retornou ${tenants.length} tenant(s):`, tenants);
-    return { success: true, data: tenants || [] };
+    console.log(`✅ [BACKEND] Query executada. Encontrados ${tenants.length} tenant(s):`);
+    tenants.forEach((t, i) => {
+      console.log(`   ${i + 1}. ${t.brand_name} (${t.tenant_id})`);
+    });
+    
+    if (tenants.length === 0) {
+      console.warn('⚠️ [BACKEND] ATENÇÃO: Nenhum tenant encontrado no banco!');
+    }
+    
+    return { success: true, data: tenants };
   } catch (error) {
-    console.error('❌ [IPC] Erro ao buscar tenants:', error);
-    return { success: false, error: error.message || 'Erro ao buscar tenants' };
+    console.error('❌ [BACKEND] Erro ao buscar tenants:', error);
+    console.error('❌ [BACKEND] Stack trace:', error.stack);
+    return { success: false, error: error.message || 'Failed to fetch tenants.' };
   }
 });
 
 // Handler para criar um novo tenant
 ipcMain.handle('create-tenant', async (event, tenantData) => {
-  // Aceita tanto camelCase quanto snake_case
-  const tenant_id = tenantData.tenant_id || tenantData.tenantId;
-  const brand_name = tenantData.brand_name || tenantData.brandName;
-  const admin_password = tenantData.admin_password || tenantData.adminPassword;
-  
-  const defaultTheme = JSON.stringify({
-    colors: {
-      primary: '#3b82f6',
-      secondary: '#10b981',
-      background: '#f3f4f6',
-      text: '#111827',
-    },
-    logos: {
-      main: '/assets/logo-placeholder.png',
-      favicon: '/assets/favicon.ico',
-    },
-  });
-  
-  const defaultGamesConfig = JSON.stringify({
-    wheel: { enabled: true, prizes: ['10% OFF', 'Brinde', 'Tente Novamente'] },
-    scratch: { enabled: true, prizes: ['Ganhou', 'Tente Novamente'] },
-    quiz: { enabled: true, questions: [] },
-  });
-
   try {
-    const result = await runQuery(
+    // Aceita tanto camelCase quanto snake_case
+    const tenant_id = tenantData.tenant_id || tenantData.tenantId;
+    const brand_name = tenantData.brand_name || tenantData.brandName;
+    const admin_password = tenantData.admin_password || tenantData.adminPassword;
+    
+    const defaultTheme = JSON.stringify({
+      colors: {
+        primary: '#3b82f6',
+        secondary: '#10b981',
+        background: '#f3f4f6',
+        text: '#111827',
+      },
+      logos: {
+        main: '/assets/logo-placeholder.png',
+        favicon: '/assets/favicon.ico',
+      },
+    });
+    
+    const defaultGamesConfig = JSON.stringify({
+      wheel: { enabled: true, prizes: ['10% OFF', 'Brinde', 'Tente Novamente'] },
+      scratch: { enabled: true, prizes: ['Ganhou', 'Tente Novamente'] },
+      quiz: { enabled: true, questions: [] },
+    });
+    
+    await runQuery(
       'INSERT INTO tenants (tenant_id, brand_name, admin_password, theme, games_config) VALUES (?, ?, ?, ?, ?)',
       [tenant_id, brand_name, admin_password, defaultTheme, defaultGamesConfig]
     );
-    const newTenant = await getQuery('SELECT * FROM tenants WHERE id = ?', [result.id]);
+    
+    const newTenant = await getQuery('SELECT * FROM tenants WHERE tenant_id = ?', [tenant_id]);
     return { success: true, tenant: newTenant };
   } catch (error) {
     console.error('Erro ao criar tenant:', error);
@@ -130,8 +108,144 @@ ipcMain.handle('create-tenant', async (event, tenantData) => {
   }
 });
 
-// ... Adicione os outros handlers (admin-login, save-lead, etc.) usando o mesmo padrão de Promises (runQuery, getQuery, allQuery)
-// Exemplo para admin-login:
+// Handler para obter um tenant específico
+ipcMain.handle('get-tenant', async (event, tenantId) => {
+  console.log(`🔍 [BACKEND] get-tenant chamado para ID: ${tenantId}`);
+  try {
+    const tenant = await getQuery('SELECT * FROM tenants WHERE tenant_id = ?', [tenantId]);
+    
+    if (!tenant) {
+      console.warn(`⚠️ [BACKEND] Tenant ${tenantId} não encontrado`);
+      return { success: false, error: 'Tenant not found' };
+    }
+    
+    // Parse JSON fields com valores padrão se não existirem
+    const tenantData = {
+      tenant_id: tenant.tenant_id,
+      brand_name: tenant.brand_name,
+      theme: JSON.parse(tenant.theme || '{}'),
+      content: tenant.content ? JSON.parse(tenant.content) : {
+        welcome_title: 'Bem-vindo!',
+        welcome_subtitle: 'Participe e ganhe prêmios',
+        form_title: 'Cadastre-se',
+        form_subtitle: 'Preencha seus dados',
+        thank_you_message: 'Obrigado!',
+        privacy_notice: 'Política de privacidade.'
+      },
+      games_config: JSON.parse(tenant.games_config || '{}'),
+      form_fields: tenant.form_fields ? JSON.parse(tenant.form_fields) : {
+        required: ['name', 'email'],
+        optional: ['phone'],
+        custom_field: { enabled: false, label: '', type: 'text', options: [] }
+      },
+      behavior: tenant.behavior ? JSON.parse(tenant.behavior) : {
+        inactivity_timeout: 30,
+        auto_return_home: true,
+        show_lead_count: false,
+        collect_photo: false,
+        admin_password: tenant.admin_password || '1234'
+      },
+      created_at: tenant.created_at
+    };
+    
+    console.log(`✅ [BACKEND] Tenant encontrado: ${tenant.brand_name}`);
+    return { success: true, data: tenantData };
+  } catch (error) {
+    console.error('❌ [BACKEND] Erro ao buscar tenant:', error);
+    console.error('❌ [BACKEND] Stack:', error.stack);
+    return { success: false, error: error.message };
+  }
+});
+
+// Handler para salvar/atualizar tenant
+ipcMain.handle('save-tenant', async (event, config) => {
+  console.log(`💾 [BACKEND] save-tenant chamado para: ${config.tenant_id}`);
+  try {
+    // Verifica se o tenant já existe
+    const existing = await getQuery('SELECT id FROM tenants WHERE tenant_id = ?', [config.tenant_id]);
+    
+    const theme = typeof config.theme === 'string' ? config.theme : JSON.stringify(config.theme);
+    const content = typeof config.content === 'string' ? config.content : JSON.stringify(config.content || {});
+    const gamesConfig = typeof config.games_config === 'string' ? config.games_config : JSON.stringify(config.games_config);
+    const formFields = typeof config.form_fields === 'string' ? config.form_fields : JSON.stringify(config.form_fields || {});
+    const behavior = typeof config.behavior === 'string' ? config.behavior : JSON.stringify(config.behavior || {});
+    
+    if (existing) {
+      // UPDATE
+      await runQuery(
+        'UPDATE tenants SET brand_name = ?, theme = ?, content = ?, games_config = ?, form_fields = ?, behavior = ? WHERE tenant_id = ?',
+        [config.brand_name, theme, content, gamesConfig, formFields, behavior, config.tenant_id]
+      );
+      console.log(`✅ [BACKEND] Tenant ${config.tenant_id} atualizado`);
+    } else {
+      // INSERT
+      const adminPassword = config.behavior?.admin_password || '1234';
+      await runQuery(
+        'INSERT INTO tenants (tenant_id, brand_name, admin_password, theme, content, games_config, form_fields, behavior) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        [config.tenant_id, config.brand_name, adminPassword, theme, content, gamesConfig, formFields, behavior]
+      );
+      console.log(`✅ [BACKEND] Tenant ${config.tenant_id} criado`);
+    }
+    
+    return { success: true };
+  } catch (error) {
+    console.error('❌ [BACKEND] Erro ao salvar tenant:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// Handler para deletar tenant
+ipcMain.handle('delete-tenant', async (event, tenantId) => {
+  console.log(`🗑️ [BACKEND] delete-tenant chamado para: ${tenantId}`);
+  try {
+    await runQuery('DELETE FROM tenants WHERE tenant_id = ?', [tenantId]);
+    console.log(`✅ [BACKEND] Tenant ${tenantId} deletado`);
+    return { success: true };
+  } catch (error) {
+    console.error('❌ [BACKEND] Erro ao deletar tenant:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// Handler para configurações
+ipcMain.handle('get-setting', async (event, key) => {
+  try {
+    const setting = await getQuery('SELECT value FROM app_settings WHERE key = ?', [key]);
+    return { success: true, data: setting ? setting.value : null };
+  } catch (error) {
+    console.error('Erro ao buscar configuração:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('set-setting', async (event, key, value) => {
+  try {
+    const existing = await getQuery('SELECT key FROM app_settings WHERE key = ?', [key]);
+    
+    if (existing) {
+      await runQuery('UPDATE app_settings SET value = ? WHERE key = ?', [value, key]);
+    } else {
+      await runQuery('INSERT INTO app_settings (key, value) VALUES (?, ?)', [key, value]);
+    }
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Erro ao salvar configuração:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('delete-setting', async (event, key) => {
+  try {
+    await runQuery('DELETE FROM app_settings WHERE key = ?', [key]);
+    return { success: true };
+  } catch (error) {
+    console.error('Erro ao deletar configuração:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// Handler para login do admin
 ipcMain.handle('admin-login', async (event, { tenant_id, password }) => {
   try {
     const tenant = await getQuery('SELECT * FROM tenants WHERE tenant_id = ? AND admin_password = ?', [tenant_id, password]);
@@ -145,7 +259,6 @@ ipcMain.handle('admin-login', async (event, { tenant_id, password }) => {
     return { success: false, error: 'An error occurred during login.' };
   }
 });
-
 
 console.log('🔌 Configurando IPC handlers...');
 console.log('✅ IPC handlers configurados!');

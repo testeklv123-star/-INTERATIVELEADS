@@ -1,0 +1,167 @@
+╔═══════════════════════════════════════════════════════════════╗
+║                                                               ║
+║   🐛 DEBUG: TELA BRANCA APÓS SELECIONAR TENANT                ║
+║                                                               ║
+╚═══════════════════════════════════════════════════════════════╝
+
+
+✅ CORREÇÃO APLICADA:
+
+  Adicionei LOGS DETALHADOS em todo o fluxo:
+  
+  ✅ TenantSelectionScreen - Logs de seleção
+  ✅ TenantStore - Logs de carregamento
+  ✅ TenantService - Logs de busca
+  ✅ IPC Handlers - Logs do backend
+
+
+═══════════════════════════════════════════════════════════════
+
+🧪 TESTE AGORA (COM DEVTOOLS):
+
+
+PASSO 1: Limpar banco
+
+         npm run db:reset
+         (Digite 's')
+
+
+PASSO 2: Iniciar app
+
+         npm run electron:dev
+
+
+PASSO 3: ABRIR DEVTOOLS (IMPORTANTE!)
+
+         Quando o app abrir, pressione F12
+         
+         ⚠️  FAÇA ISSO ANTES de clicar no tenant!
+
+
+PASSO 4: Clicar no tenant
+
+         Na tela, clique em "Tech Store SP"
+
+
+PASSO 5: Ver os logs no Console
+
+         No DevTools, aba Console, você deve ver:
+         
+         🔵 [TenantSelection] Tenant selecionado...
+         🔄 [TenantStore] loadTenant iniciado...
+         🔍 [TenantService] loadTenantConfig...
+         📂 [TenantService] Tentando carregar...
+         ✅ [TenantService] Tenant carregado...
+         ✅ [TenantStore] Config recebida...
+         🎉 [TenantStore] loadTenant concluído!
+         ✅ [TenantSelection] Tenant carregado!
+         🔵 [TenantSelection] Navegando para /
+
+
+═══════════════════════════════════════════════════════════════
+
+🔍 O QUE VERIFICAR NOS LOGS:
+
+
+✅ SE APARECER TUDO:
+   
+   Significa que o tenant carregou OK!
+   Procure por erros no AttractScreen:
+   
+   ❌ Cannot read property 'X' of undefined
+   ❌ TypeError: ...
+
+
+❌ SE PARAR EM ALGUM PONTO:
+   
+   Veja onde os logs param e me envie:
+   - Screenshot do console
+   - Última mensagem que apareceu
+
+
+❌ SE DER ERRO VERMELHO:
+   
+   Me envie o erro completo que aparece no console
+
+
+═══════════════════════════════════════════════════════════════
+
+🛠️ TESTES MANUAIS:
+
+
+TESTE 1: Carregar tenant via console
+
+  1. Abra DevTools (F12)
+  2. Cole no Console:
+  
+     await window.electronAPI.getTenant('loja_tech_sp_001')
+       .then(console.log)
+  
+  3. Deve retornar:
+     { success: true, data: { tenant_id, brand_name, ... } }
+
+
+TESTE 2: Ver estado do Zustand
+
+  1. No Console (F12):
+  
+     localStorage.getItem('tenant-storage')
+  
+  2. Deve mostrar um JSON com tenantConfig
+
+
+TESTE 3: Limpar localStorage
+
+  Se estiver dando problema, tente:
+  
+  1. No Console (F12):
+     localStorage.clear();
+     location.reload();
+  
+  2. Depois selecione o tenant novamente
+
+
+═══════════════════════════════════════════════════════════════
+
+📋 CHECKLIST:
+
+  [ ] DevTools aberto ANTES de clicar no tenant
+  [ ] Todos os logs aparecem (🔵 🔄 🔍 ✅)
+  [ ] Nenhum erro vermelho no console
+  [ ] isConfigured = true (veja nos logs)
+  [ ] hasTenantConfig = true (veja nos logs)
+  [ ] brandName aparece nos logs
+  [ ] Navegação vai para "/"
+  [ ] Tela NÃO fica em branco
+
+
+═══════════════════════════════════════════════════════════════
+
+🆘 SE NÃO FUNCIONAR:
+
+  Me envie:
+  
+  1. Screenshot do console (F12) com TODOS os logs
+  2. Screenshot da tela em branco
+  3. Resultado deste comando no console:
+  
+     JSON.parse(localStorage.getItem('tenant-storage'))
+
+
+═══════════════════════════════════════════════════════════════
+
+📚 DOCUMENTAÇÃO:
+
+  DEBUG_TELA_BRANCA.md  - Guia detalhado de debugging
+
+
+═══════════════════════════════════════════════════════════════
+
+🚀 COMECE AGORA:
+
+  npm run db:reset          ← Limpar
+  npm run electron:dev      ← Iniciar
+  [Pressione F12]           ← DevTools
+  [Clique no tenant]        ← Ver logs
+  [Me envie os logs]        ← Se não funcionar
+

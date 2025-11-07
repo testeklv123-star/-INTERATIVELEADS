@@ -35,12 +35,24 @@ const TenantSelectionScreen: React.FC = () => {
 
   const handleTenantSelect = async (tenant: TenantSummary) => {
     try {
+      console.log('🔵 [TenantSelection] Tenant selecionado:', tenant.tenant_id);
+      console.log('🔵 [TenantSelection] Carregando configuração...');
+      
       // Update the global tenant state by loading the full tenant config
       await useTenantStore.getState().loadTenant(tenant.tenant_id);
+      
+      console.log('✅ [TenantSelection] Tenant carregado com sucesso!');
+      console.log('🔵 [TenantSelection] Estado após carregar:', {
+        isConfigured: useTenantStore.getState().isConfigured,
+        hasTenantConfig: !!useTenantStore.getState().tenantConfig,
+        brandName: useTenantStore.getState().tenantConfig?.brand_name
+      });
+      
       // Navigate to the home screen
+      console.log('🔵 [TenantSelection] Navegando para /');
       navigate('/');
     } catch (error) {
-      console.error('Error loading tenant:', error);
+      console.error('❌ [TenantSelection] Erro ao carregar tenant:', error);
       setError('Falha ao carregar o tenant selecionado. Por favor, tente novamente.');
     }
   };

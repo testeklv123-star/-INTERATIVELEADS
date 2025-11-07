@@ -27,13 +27,34 @@ export const useTenantStore = create<TenantState>()(
       _hasHydrated: false,
       setHasHydrated: (hydrated) => set({ _hasHydrated: hydrated }),
       loadTenant: async (tenantId: string) => {
+        console.log('🔄 [TenantStore] loadTenant iniciado para:', tenantId);
         set({ isLoading: true, error: null });
         try {
+          console.log('📡 [TenantStore] Chamando tenantService.loadTenantConfig...');
           const config = await tenantService.loadTenantConfig(tenantId);
+          
+          console.log('✅ [TenantStore] Config recebida:', {
+            tenant_id: config.tenant_id,
+            brand_name: config.brand_name,
+            hasTheme: !!config.theme,
+            hasContent: !!config.content,
+            hasGamesConfig: !!config.games_config,
+            hasFormFields: !!config.form_fields,
+            hasBehavior: !!config.behavior
+          });
+          
+          console.log('💾 [TenantStore] Salvando no state...');
           set({ tenantConfig: config, isConfigured: true, isLoading: false });
+          
+          console.log('🎨 [TenantStore] Aplicando tema...');
           applyTheme(config.theme);
+          
+          console.log('💽 [TenantStore] Persistindo tenant ativo...');
           await tenantService.persistActiveTenantId(tenantId);
+          
+          console.log('🎉 [TenantStore] loadTenant concluído com sucesso!');
         } catch (error) {
+          console.error('❌ [TenantStore] Erro em loadTenant:', error);
           const errorMessage = error instanceof Error ? error.message : 'Ocorreu um erro desconhecido';
           set({ error: errorMessage, isLoading: false, tenantConfig: null, isConfigured: false });
           throw error;
