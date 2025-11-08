@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InterativeLeads - Totem</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="totem-card">
+            <div class="logo-container">
+                <h1 class="brand-title">InterativeLeads</h1>
+                <p class="brand-subtitle">Capture de Leads Inteligente</p>
+            </div>
+
+            <div id="success-message" class="message success-message hidden">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 6L9 17l-5-5"></path>
+                </svg>
+                <p>Obrigado! Seus dados foram salvos localmente e serão sincronizados em instantes.</p>
+            </div>
+
+            <div id="error-message" class="message error-message hidden">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                <p>Ocorreu uma falha ao salvar seus dados. Por favor, tente novamente.</p>
+            </div>
+
+            <form id="lead-form" class="lead-form">
+                <h2 class="form-title">Cadastre-se e participe!</h2>
+                <p class="form-description">Preencha seus dados para continuar</p>
+
+                <div class="form-group">
+                    <label for="name">Nome Completo *</label>
+                    <input 
+                        type="text" 
+                        id="name" 
+                        name="name" 
+                        required 
+                        minlength="3"
+                        placeholder="Digite seu nome completo"
+                    >
+                    <span class="error-text" id="name-error"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email *</label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        name="email" 
+                        required
+                        placeholder="seu@email.com"
+                    >
+                    <span class="error-text" id="email-error"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Telefone</label>
+                    <input 
+                        type="tel" 
+                        id="phone" 
+                        name="phone"
+                        placeholder="(00) 00000-0000"
+                    >
+                    <span class="error-text" id="phone-error"></span>
+                </div>
+
+                <button type="submit" id="submit-btn" class="submit-btn">
+                    <span id="btn-text">Enviar</span>
+                    <span id="btn-loader" class="loader hidden"></span>
+                </button>
+            </form>
+
+            <div class="status-bar">
+                <div class="status-indicator">
+                    <span class="status-dot" id="status-dot"></span>
+                    <span class="status-text" id="status-text">Verificando conexão...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/script.js"></script>
+</body>
+</html>
+
