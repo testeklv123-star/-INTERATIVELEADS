@@ -1,0 +1,6 @@
+﻿$env:SUPABASE_URL='https://rtodbbiugsrhupmyarut.supabase.co'
+$env:SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0b2RiYml1Z3NyaHVwbXlhcnV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1NDUyOTcsImV4cCI6MjA3ODEyMTI5N30.QYitts9taqp-Zfisx7COvX0drdRfNsIySBXC0s7I1ck'
+$env:SUPABASE_SERVICE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0b2RiYml1Z3NyaHVwbXlhcnV0Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MjU0NTI5NywiZXhwIjoyMDc4MTIxMjk3fQ.96QtXQP94Ct49pjbbROOqrj6zrRrEK292wc0sMUoip0'
+$env:PORT='5000'
+$env:SYNC_INTERVAL_SECONDS='30'
+node src-offline-first/server.js

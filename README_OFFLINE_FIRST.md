@@ -285,8 +285,8 @@ SYNC_INTERVAL_SECONDS=30
 # Verificar logs
 docker-compose logs backend-local
 
-# Verificar se a porta 3001 está livre
-netstat -ano | findstr :3001
+# Verificar se a porta 5000 está livre
+netstat -ano | findstr :5000
 ```
 
 ### Sincronização não funciona
@@ -296,12 +296,12 @@ netstat -ano | findstr :3001
 docker-compose logs -f backend-local | grep "🔄"
 
 # Testar conexão com Supabase
-curl http://localhost:3001/api/sync/stats
+curl http://localhost:5000/api/sync/stats
 ```
 
 ### Frontend não conecta ao backend
 
-1. Verificar se o backend está rodando: `http://localhost:3001/health`
+1. Verificar se o backend está rodando: `http://localhost:5000/health`
 2. Verificar CORS no backend
 3. Verificar URL da API no `frontend-web/js/script.js`
 
@@ -355,10 +355,10 @@ docker cp interativeleads-backend:/app/data/kiosk.db ./backup/
 docker-compose ps
 
 # Estatísticas de sincronização
-curl http://localhost:3001/api/sync/stats
+curl http://localhost:5000/api/sync/stats
 
 # Estatísticas de leads
-curl http://localhost:3001/api/leads/stats
+curl http://localhost:5000/api/leads/stats
 ```
 
 ### Logs em Tempo Real

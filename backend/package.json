@@ -14,7 +14,8 @@
     "test:watch": "vitest",
     "migration:generate": "typeorm-ts-node-commonjs migration:generate src/db/migrations/AutoMigration -d src/db/data-source.ts",
     "migration:run": "typeorm-ts-node-commonjs migration:run -d src/db/data-source.ts",
-    "migration:revert": "typeorm-ts-node-commonjs migration:revert -d src/db/data-source.ts"
+    "migration:revert": "typeorm-ts-node-commonjs migration:revert -d src/db/data-source.ts",
+    "offline:dev": "node src-offline-first/server.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

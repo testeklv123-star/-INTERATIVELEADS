@@ -1,8 +1,10 @@
 /**
  * Controller para gerenciar requisições de leads
+ * Agora com suporte a multi-tenancy
  */
 
 const leadModelLocal = require('../models/leadModelLocal');
+const tenantService = require('../services/tenantService');
 
 /**
  * Cria um novo lead localmente
@@ -30,10 +32,20 @@ async function createLocalLead(req, res) {
       });
     }
 
-    // Criar lead no banco local
-    const lead = leadModelLocal.createLead({ name, email, phone });
+    // Buscar o tenant_slug atual (da variável de ambiente ou banco local)
+    const tenant_slug = tenantService.getCurrentTenantSlug();
+    
+    console.log(`📌 Criando lead para o tenant: ${tenant_slug}`);
 
-    console.log('✅ Lead criado localmente:', lead.id);
+    // Criar lead no banco local COM O TENANT_SLUG
+    const lead = leadModelLocal.createLead({ 
+      name, 
+      email, 
+      phone,
+      tenant_slug, // <-- Incluir o tenant_slug
+    });
+
+    console.log(`✅ Lead criado localmente: ${lead.id} (Tenant: ${tenant_slug})`);
 
     return res.status(201).json({
       success: true,

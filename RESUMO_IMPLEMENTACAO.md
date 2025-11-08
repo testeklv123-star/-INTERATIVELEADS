@@ -221,7 +221,7 @@ ON leads FOR INSERT TO anon WITH CHECK (true);
 
 ### ✅ Porta Atualizada
 
-**Problema anterior:** Código tinha porta 3001 hardcoded
+**Problema anterior:** Código tinha porta 3001 hardcoded (atualizada para 5000)
 
 **Solução aplicada:** Atualizado para porta 5000 em todos os arquivos
 

@@ -10,10 +10,16 @@ const supabase = require('../config/supabaseClient');
  * @param {string} leadData.name - Nome do lead
  * @param {string} leadData.email - Email do lead
  * @param {string} [leadData.phone] - Telefone do lead (opcional)
+ * @param {string} leadData.tenant_id - UUID do tenant (obrigatório para multi-tenancy)
  * @returns {Promise<Object>} Lead criado
  */
 async function createLead(leadData) {
-  const { name, email, phone } = leadData;
+  const { name, email, phone, tenant_id } = leadData;
+
+  // Validar que tenant_id foi fornecido
+  if (!tenant_id) {
+    throw new Error('tenant_id é obrigatório para criar um lead no Supabase');
+  }
 
   const { data, error } = await supabase
     .from('leads')
@@ -22,6 +28,7 @@ async function createLead(leadData) {
         name,
         email,
         phone: phone || null,
+        tenant_id, // <-- Incluir o UUID do tenant
       },
     ])
     .select();

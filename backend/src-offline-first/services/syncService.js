@@ -1,9 +1,11 @@
 /**
  * Serviço de sincronização de leads do SQLite local para Supabase
+ * Agora com suporte a multi-tenancy
  */
 
 const leadModelLocal = require('../models/leadModelLocal');
 const leadModelSupabase = require('../models/leadModelSupabase');
+const tenantService = require('./tenantService');
 
 let isSyncing = false;
 let lastSyncTime = null;
@@ -49,22 +51,41 @@ async function syncPendingLeads() {
     let successCount = 0;
     let errorCount = 0;
 
+    // Cache de tenants para evitar múltiplas buscas
+    const tenantCache = new Map();
+
     // Sincronizar cada lead
     for (const lead of pendingLeads) {
       try {
-        // Tentar criar no Supabase
+        // 1. Buscar informações do tenant pelo slug
+        let tenant = tenantCache.get(lead.tenant_slug);
+        
+        if (!tenant) {
+          // Se não estiver no cache, buscar do Supabase
+          tenant = await tenantService.getTenantBySlug(lead.tenant_slug);
+          
+          if (!tenant) {
+            throw new Error(`Tenant "${lead.tenant_slug}" não encontrado no Supabase. Certifique-se de que o tenant foi criado.`);
+          }
+          
+          // Adicionar ao cache
+          tenantCache.set(lead.tenant_slug, tenant);
+        }
+
+        // 2. Criar o lead no Supabase com o tenant_id (UUID)
         await leadModelSupabase.createLead({
           name: lead.name,
           email: lead.email,
           phone: lead.phone,
+          tenant_id: tenant.id, // <-- UUID do tenant do Supabase
         });
 
-        // Marcar como sincronizado no banco local
+        // 3. Marcar como sincronizado no banco local
         leadModelLocal.markAsSynced(lead.id);
         successCount++;
         syncStats.totalSynced++;
 
-        console.log(`  ✅ Lead ${lead.id} sincronizado com sucesso`);
+        console.log(`  ✅ Lead ${lead.id} sincronizado com sucesso (Tenant: ${tenant.name})`);
       } catch (error) {
         // Marcar como erro no banco local
         leadModelLocal.markAsError(lead.id, error.message);

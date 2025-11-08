@@ -10,23 +10,30 @@ const db = require('../config/databaseLocal');
  * @param {string} leadData.name - Nome do lead
  * @param {string} leadData.email - Email do lead
  * @param {string} [leadData.phone] - Telefone do lead (opcional)
+ * @param {string} leadData.tenant_slug - Slug do tenant (obrigatório para multi-tenancy)
  * @returns {Object} Lead criado com ID
  */
 function createLead(leadData) {
-  const { name, email, phone } = leadData;
+  const { name, email, phone, tenant_slug } = leadData;
+
+  // Validar que tenant_slug foi fornecido
+  if (!tenant_slug) {
+    throw new Error('tenant_slug é obrigatório para criar um lead');
+  }
 
   const stmt = db.prepare(`
-    INSERT INTO leads (name, email, phone, sync_status)
-    VALUES (?, ?, ?, 'PENDING')
+    INSERT INTO leads (name, email, phone, tenant_slug, sync_status)
+    VALUES (?, ?, ?, ?, 'PENDING')
   `);
 
-  const result = stmt.run(name, email, phone || null);
+  const result = stmt.run(name, email, phone || null, tenant_slug);
 
   return {
     id: result.lastInsertRowid,
     name,
     email,
     phone,
+    tenant_slug,
     created_at: new Date().toISOString(),
     sync_status: 'PENDING',
   };
@@ -34,11 +41,11 @@ function createLead(leadData) {
 
 /**
  * Busca todos os leads com status PENDING para sincronização
- * @returns {Array} Lista de leads pendentes
+ * @returns {Array} Lista de leads pendentes (agora inclui tenant_slug)
  */
 function getPendingLeads() {
   const stmt = db.prepare(`
-    SELECT id, name, email, phone, created_at
+    SELECT id, name, email, phone, tenant_slug, created_at
     FROM leads
     WHERE sync_status = 'PENDING'
     ORDER BY created_at ASC

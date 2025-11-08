@@ -5,7 +5,7 @@
 ### Pré-requisitos
 
 - Docker e Docker Compose instalados
-- Porta 80 e 3001 disponíveis
+- Porta 80 e 5000 disponíveis
 
 ### Passo 1: Configurar Supabase (Apenas uma vez)
 
@@ -276,7 +276,7 @@ server {
     }
 
     location /api {
-        proxy_pass http://localhost:3001;
+        proxy_pass http://localhost:5000; # Port standardized to 5000
     }
 }
 ```

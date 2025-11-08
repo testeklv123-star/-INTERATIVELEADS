@@ -11,6 +11,7 @@ const cron = require('node-cron');
 // Importar rotas
 const leadRoutes = require('./routes/leadRoutes');
 const syncRoutes = require('./routes/syncRoutes');
+const tenantRoutes = require('./routes/tenantRoutes');
 
 // Importar serviço de sincronização
 const { syncPendingLeads } = require('./services/syncService');
@@ -43,6 +44,7 @@ app.get('/health', (req, res) => {
 
 app.use('/api/leads', leadRoutes);
 app.use('/api/sync', syncRoutes);
+app.use('/api/tenants', tenantRoutes);
 
 // Rota 404
 app.use((req, res) => {
@@ -93,6 +95,7 @@ app.listen(PORT, () => {
   console.log(`\n✅ Servidor rodando em: http://localhost:${PORT}`);
   console.log(`✅ Health check: http://localhost:${PORT}/health`);
   console.log(`✅ Endpoint de leads: http://localhost:${PORT}/api/leads`);
+  console.log(`✅ Endpoint de tenants: http://localhost:${PORT}/api/tenants`);
   console.log(`✅ Sincronização automática: a cada ${syncInterval} segundos\n`);
 });
 
