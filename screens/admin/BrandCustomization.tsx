@@ -36,10 +36,10 @@ const BrandCustomization: React.FC = () => {
     // In a real app, you'd upload files and get back URLs. Here we use the base64 preview as the URL.
     if(logoPreviews.main_logo_url) finalTheme.logos.main_logo_url = logoPreviews.main_logo_url;
     if(logoPreviews.center_logo_url) finalTheme.logos.center_logo_url = logoPreviews.center_logo_url;
-    if(logoPreviews.watermark_logo_url) finalTheme.logos.watermark_url = logoPreviews.watermark_logo_url;
+    if(logoPreviews.watermark_url) finalTheme.logos.watermark_url = logoPreviews.watermark_url;
 
     setTheme(finalTheme);
-    alert('Tema salvo com sucesso!');
+    alert('✅ Tema salvo com sucesso! As alterações serão aplicadas imediatamente.');
   };
 
   const colorKeys = Object.keys(theme.colors);

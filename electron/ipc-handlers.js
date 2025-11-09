@@ -260,5 +260,114 @@ ipcMain.handle('admin-login', async (event, { tenant_id, password }) => {
   }
 });
 
+// ==================== LEADS HANDLERS ====================
+
+// Handler para salvar lead
+ipcMain.handle('save-lead', async (event, leadData) => {
+  console.log('💾 [BACKEND] save-lead chamado:', leadData);
+  try {
+    const result = await runQuery(
+      'INSERT INTO leads (tenant_id, name, email, phone, game_played, prize_won) VALUES (?, ?, ?, ?, ?, ?)',
+      [
+        leadData.tenant_id,
+        leadData.name,
+        leadData.email,
+        leadData.phone || null,
+        leadData.game_played || leadData.game_selected,
+        leadData.prize_won || null
+      ]
+    );
+    console.log(`✅ [BACKEND] Lead salvo com ID: ${result.id}`);
+    return { success: true, data: { id: result.id } };
+  } catch (error) {
+    console.error('❌ [BACKEND] Erro ao salvar lead:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// Handler para buscar um lead específico
+ipcMain.handle('get-lead', async (event, leadId) => {
+  console.log(`🔍 [BACKEND] get-lead chamado para ID: ${leadId}`);
+  try {
+    const lead = await getQuery('SELECT * FROM leads WHERE id = ?', [leadId]);
+    if (!lead) {
+      return { success: false, error: 'Lead not found' };
+    }
+    return { success: true, data: lead };
+  } catch (error) {
+    console.error('❌ [BACKEND] Erro ao buscar lead:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// Handler para buscar leads de um tenant
+ipcMain.handle('get-leads', async (event, tenantId, limit = 1000) => {
+  console.log(`🔍 [BACKEND] get-leads chamado para tenant: ${tenantId}, limit: ${limit}`);
+  try {
+    const leads = await allQuery(
+      'SELECT id, tenant_id, name, email, phone, game_played as game_selected, prize_won, created_at as timestamp, 1 as consent FROM leads WHERE tenant_id = ? ORDER BY created_at DESC LIMIT ?',
+      [tenantId, limit]
+    );
+    console.log(`✅ [BACKEND] ${leads.length} lead(s) encontrado(s)`);
+    return { success: true, data: leads };
+  } catch (error) {
+    console.error('❌ [BACKEND] Erro ao buscar leads:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// Handler para contar leads de um tenant
+ipcMain.handle('get-leads-count', async (event, tenantId) => {
+  console.log(`🔍 [BACKEND] get-leads-count chamado para tenant: ${tenantId}`);
+  try {
+    const result = await getQuery('SELECT COUNT(*) as count FROM leads WHERE tenant_id = ?', [tenantId]);
+    console.log(`✅ [BACKEND] Total de leads: ${result.count}`);
+    return { success: true, data: result.count };
+  } catch (error) {
+    console.error('❌ [BACKEND] Erro ao contar leads:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// Handler para atualizar lead
+ipcMain.handle('update-lead', async (event, leadId, updates) => {
+  console.log(`📝 [BACKEND] update-lead chamado para ID: ${leadId}`);
+  try {
+    const fields = [];
+    const values = [];
+    
+    if (updates.name !== undefined) { fields.push('name = ?'); values.push(updates.name); }
+    if (updates.email !== undefined) { fields.push('email = ?'); values.push(updates.email); }
+    if (updates.phone !== undefined) { fields.push('phone = ?'); values.push(updates.phone); }
+    if (updates.game_played !== undefined) { fields.push('game_played = ?'); values.push(updates.game_played); }
+    if (updates.prize_won !== undefined) { fields.push('prize_won = ?'); values.push(updates.prize_won); }
+    
+    if (fields.length === 0) {
+      return { success: false, error: 'No fields to update' };
+    }
+    
+    values.push(leadId);
+    await runQuery(`UPDATE leads SET ${fields.join(', ')} WHERE id = ?`, values);
+    console.log(`✅ [BACKEND] Lead ${leadId} atualizado`);
+    return { success: true };
+  } catch (error) {
+    console.error('❌ [BACKEND] Erro ao atualizar lead:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// Handler para deletar lead
+ipcMain.handle('delete-lead', async (event, leadId) => {
+  console.log(`🗑️ [BACKEND] delete-lead chamado para ID: ${leadId}`);
+  try {
+    await runQuery('DELETE FROM leads WHERE id = ?', [leadId]);
+    console.log(`✅ [BACKEND] Lead ${leadId} deletado`);
+    return { success: true };
+  } catch (error) {
+    console.error('❌ [BACKEND] Erro ao deletar lead:', error);
+    return { success: false, error: error.message };
+  }
+});
+
 console.log('🔌 Configurando IPC handlers...');
 console.log('✅ IPC handlers configurados!');

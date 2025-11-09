@@ -37,6 +37,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Admin
   adminLogin: (tenant_id, password) => ipcRenderer.invoke('admin-login', { tenant_id, password }),
   
+  // Leads
+  saveLead: (leadData) => ipcRenderer.invoke('save-lead', leadData),
+  getLead: (leadId) => ipcRenderer.invoke('get-lead', leadId),
+  getLeads: (tenantId, limit) => ipcRenderer.invoke('get-leads', tenantId, limit),
+  getLeadsCount: (tenantId) => ipcRenderer.invoke('get-leads-count', tenantId),
+  updateLead: (leadId, updates) => ipcRenderer.invoke('update-lead', leadId, updates),
+  deleteLead: (leadId) => ipcRenderer.invoke('delete-lead', leadId),
+  
   // Eventos
   onAppReady: (callback) => ipcRenderer.on('app-ready', callback),
 });

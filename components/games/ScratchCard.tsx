@@ -13,9 +13,17 @@ const ScratchCard: React.FC = () => {
 
     useEffect(() => {
         const prizes = tenantConfig?.games_config.scratch_card.prizes || [];
+        console.log('🎫 [ScratchCard] Prêmios disponíveis:', prizes);
         if (prizes.length > 0) {
             const randomIndex = Math.floor(Math.random() * prizes.length);
-            setPrize(prizes[randomIndex]);
+            const selectedPrize = prizes[randomIndex];
+            // Se o prêmio é um objeto, pega o nome, senão usa como string
+            const prizeName = typeof selectedPrize === 'object' ? selectedPrize.name : selectedPrize;
+            console.log('🎁 [ScratchCard] Prêmio selecionado:', prizeName);
+            setPrize(prizeName);
+        } else {
+            console.warn('⚠️ [ScratchCard] Nenhum prêmio configurado!');
+            setPrize('Prêmio Surpresa');
         }
     }, [tenantConfig]);
 
@@ -57,12 +65,24 @@ const ScratchCard: React.FC = () => {
 
     const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
         e.preventDefault();
+        console.log('🖱️ [ScratchCard] Iniciando raspagem');
         setIsDrawing(true);
-        draw(e);
+        // Desenha imediatamente no início
+        const canvas = canvasRef.current;
+        const ctx = canvas?.getContext('2d');
+        if (!ctx) {
+            console.error('❌ [ScratchCard] Contexto do canvas não disponível');
+            return;
+        }
+        const { x, y } = getPosition(e);
+        console.log('📍 [ScratchCard] Posição:', { x, y });
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.beginPath();
+        ctx.arc(x, y, 40, 0, Math.PI * 2, false);
+        ctx.fill();
     };
 
     const stopDrawing = () => {
-        if (!isDrawing) return;
         setIsDrawing(false);
         checkReveal(); // Check percentage only when drawing stops
     };
@@ -105,24 +125,43 @@ const ScratchCard: React.FC = () => {
         }
     };
 
+    const backgroundImage = tenantConfig?.games_config.scratch_card.background_image;
+
     return (
         <div className="w-full h-screen flex flex-col justify-center items-center p-8 overflow-hidden" style={{backgroundColor: 'var(--color-background)'}}>
             <h1 className="text-5xl font-bold mb-12 text-center" style={{color: 'var(--color-primary)'}}>Raspadinha Premiada!</h1>
 
             <div className="relative w-full max-w-2xl aspect-[1.618] shadow-2xl" style={{borderRadius: 'var(--border-radius)'}}>
-                <div 
-                    className="absolute inset-0 flex justify-center items-center text-center p-4"
-                    style={{
-                        backgroundColor: 'var(--color-accent)',
-                        color: 'var(--color-button-primary-text)',
-                        borderRadius: 'var(--border-radius)'
-                    }}
-                >
-                    <div>
-                        <p className="text-2xl">Parabéns! Você ganhou:</p>
-                        <p className="text-6xl font-bold mt-4">{prize}</p>
+                {backgroundImage ? (
+                    <div 
+                        className="absolute inset-0 flex justify-center items-center text-center p-4"
+                        style={{
+                            backgroundImage: `url(${backgroundImage})`,
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center',
+                            borderRadius: 'var(--border-radius)'
+                        }}
+                    >
+                        <div className="bg-black bg-opacity-50 p-8 rounded-lg">
+                            <p className="text-2xl text-white">Parabéns! Você ganhou:</p>
+                            <p className="text-6xl font-bold mt-4 text-white">{prize}</p>
+                        </div>
                     </div>
-                </div>
+                ) : (
+                    <div 
+                        className="absolute inset-0 flex justify-center items-center text-center p-4"
+                        style={{
+                            backgroundColor: 'var(--color-accent)',
+                            color: 'var(--color-button-primary-text)',
+                            borderRadius: 'var(--border-radius)'
+                        }}
+                    >
+                        <div>
+                            <p className="text-2xl">Parabéns! Você ganhou:</p>
+                            <p className="text-6xl font-bold mt-4">{prize}</p>
+                        </div>
+                    </div>
+                )}
                 <canvas
                     ref={canvasRef}
                     className="absolute inset-0 cursor-grab active:cursor-grabbing"
@@ -133,7 +172,11 @@ const ScratchCard: React.FC = () => {
                     onTouchStart={startDrawing}
                     onTouchEnd={stopDrawing}
                     onTouchMove={draw}
-                    style={{borderRadius: 'var(--border-radius)'}}
+                    style={{
+                        borderRadius: 'var(--border-radius)',
+                        zIndex: 10,
+                        touchAction: 'none'
+                    }}
                 />
             </div>
             

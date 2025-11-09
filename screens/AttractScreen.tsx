@@ -156,12 +156,14 @@ const AttractScreen: React.FC = () => {
       />
 
       <motion.div
-        className="absolute -z-10 inset-0"
+        className="absolute inset-0"
         initial={{ opacity: 0 }}
         animate={{ opacity: 0.35 }}
         transition={{ duration: 2 }}
         style={{
-          background: `radial-gradient(circle at 20% 20%, var(--color-accent) 0%, transparent 55%), radial-gradient(circle at 80% 30%, var(--color-secondary) 0%, transparent 60%), radial-gradient(circle at 50% 80%, var(--color-primary) 0%, transparent 65%)`
+          background: `radial-gradient(circle at 20% 20%, var(--color-accent) 0%, transparent 55%), radial-gradient(circle at 80% 30%, var(--color-secondary) 0%, transparent 60%), radial-gradient(circle at 50% 80%, var(--color-primary) 0%, transparent 65%)`,
+          zIndex: -1,
+          pointerEvents: 'none'
         }}
       />
     </div>

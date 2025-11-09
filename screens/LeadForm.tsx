@@ -169,9 +169,24 @@ const LeadForm: React.FC = () => {
             </label>
           </div>
           
-          <Button type="submit" className="w-full" disabled={isSubmitting}>
-            {isSubmitting ? 'ENVIANDO...' : 'JOGAR AGORA'}
-          </Button>
+          <div className="flex gap-4">
+            <Button 
+              type="button" 
+              variant="secondary"
+              onClick={() => navigate('/')}
+              className="flex-1"
+              disabled={isSubmitting}
+            >
+              SAIR
+            </Button>
+            <Button 
+              type="submit" 
+              className="flex-1" 
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'ENVIANDO...' : 'JOGAR AGORA'}
+            </Button>
+          </div>
         </form>
       </div>
     </div>

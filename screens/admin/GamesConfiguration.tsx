@@ -8,6 +8,11 @@ const GamesConfiguration: React.FC = () => {
 
   if (!tenantConfig) return null;
 
+  // Estado para jogos habilitados
+  const [enabledGames, setEnabledGames] = useState<string[]>(
+    tenantConfig.games_config.enabled_games || []
+  );
+
   // Estado local para Prize Wheel
   const [wheelPrizes, setWheelPrizes] = useState<Prize[]>(
     tenantConfig.games_config.prize_wheel.prizes.map(p => ({
@@ -57,14 +62,16 @@ const GamesConfiguration: React.FC = () => {
 
   // Funções para Prize Wheel
   const updateWheelPrize = (index: number, field: keyof Prize, value: any) => {
-    const updated = [...wheelPrizes];
-    (updated[index] as any)[field] = value;
-    setWheelPrizes(updated);
+    setWheelPrizes(prev => {
+      const updated = [...prev];
+      (updated[index] as any)[field] = value;
+      return updated;
+    });
   };
 
   const addWheelPrize = () => {
-    setWheelPrizes([...wheelPrizes, {
-      id: `p${Date.now()}`,
+    const newPrize = {
+      id: `p${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       label: 'Novo',
       name: 'Novo Prêmio',
       probability: 10,
@@ -72,7 +79,8 @@ const GamesConfiguration: React.FC = () => {
       quantity_available: 100,
       quantity_total: 100,
       times_won: 0
-    }]);
+    };
+    setWheelPrizes([...wheelPrizes, newPrize]);
   };
 
   const removeWheelPrize = (index: number) => {
@@ -81,20 +89,23 @@ const GamesConfiguration: React.FC = () => {
 
   // Funções para Scratch Card
   const updateScratchPrize = (index: number, field: keyof ScratchCardPrize, value: any) => {
-    const updated = [...scratchPrizes];
-    (updated[index] as any)[field] = value;
-    setScratchPrizes(updated);
+    setScratchPrizes(prev => {
+      const updated = [...prev];
+      (updated[index] as any)[field] = value;
+      return updated;
+    });
   };
 
   const addScratchPrize = () => {
-    setScratchPrizes([...scratchPrizes, {
-      id: `scratch_${Date.now()}`,
+    const newPrize = {
+      id: `scratch_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       name: 'Novo Prêmio',
       probability: 10,
       quantity_available: 50,
       quantity_total: 50,
       times_won: 0
-    }]);
+    };
+    setScratchPrizes([...scratchPrizes, newPrize]);
   };
 
   const removeScratchPrize = (index: number) => {
@@ -103,24 +114,30 @@ const GamesConfiguration: React.FC = () => {
 
   // Funções para Quiz
   const updateQuizQuestion = (index: number, field: keyof QuizQuestion, value: any) => {
-    const updated = [...quizQuestions];
-    (updated[index] as any)[field] = value;
-    setQuizQuestions(updated);
+    setQuizQuestions(prev => {
+      const updated = [...prev];
+      (updated[index] as any)[field] = value;
+      return updated;
+    });
   };
 
   const updateQuizOption = (qIndex: number, optIndex: number, value: string) => {
-    const updated = [...quizQuestions];
-    updated[qIndex].options[optIndex] = value;
-    setQuizQuestions(updated);
+    setQuizQuestions(prev => {
+      const updated = [...prev];
+      updated[qIndex].options = [...updated[qIndex].options];
+      updated[qIndex].options[optIndex] = value;
+      return updated;
+    });
   };
 
   const addQuizQuestion = () => {
-    setQuizQuestions([...quizQuestions, {
-      id: `q${Date.now()}`,
+    const newQuestion = {
+      id: `q${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       question: 'Nova pergunta?',
       options: ['Opção 1', 'Opção 2', 'Opção 3', 'Opção 4'],
       correct: 0
-    }]);
+    };
+    setQuizQuestions([...quizQuestions, newQuestion]);
   };
 
   const removeQuizQuestion = (index: number) => {
@@ -146,10 +163,20 @@ const GamesConfiguration: React.FC = () => {
     setQuizPrizeRules(quizPrizeRules.filter((_, i) => i !== index));
   };
 
+  // Toggle jogo habilitado/desabilitado
+  const toggleGame = (gameKey: string) => {
+    setEnabledGames(prev => 
+      prev.includes(gameKey)
+        ? prev.filter(g => g !== gameKey)
+        : [...prev, gameKey]
+    );
+  };
+
   // Salvar todas as configurações
   const handleSave = () => {
     const newGamesConfig = {
       ...tenantConfig.games_config,
+      enabled_games: enabledGames,
       prize_wheel: { prizes: wheelPrizes },
       scratch_card: {
         overlay_color: tenantConfig.games_config.scratch_card.overlay_color,
@@ -168,6 +195,41 @@ const GamesConfiguration: React.FC = () => {
   return (
     <div>
       <h1 className="text-3xl font-bold mb-6 text-gray-800">⚙️ Configuração dos Jogos</h1>
+
+      {/* Seção de Jogos Habilitados */}
+      <div className="bg-white p-6 rounded-lg shadow mb-6">
+        <h2 className="text-xl font-bold mb-4 text-gray-700">Jogos Habilitados</h2>
+        <p className="text-gray-600 mb-4">Selecione quais jogos estarão disponíveis para os usuários</p>
+        <div className="flex flex-wrap gap-4">
+          <label className="flex items-center gap-3 cursor-pointer bg-gray-50 p-4 rounded-lg border-2 border-gray-200 hover:border-blue-400 transition-colors">
+            <input
+              type="checkbox"
+              checked={enabledGames.includes('prize_wheel')}
+              onChange={() => toggleGame('prize_wheel')}
+              className="w-5 h-5"
+            />
+            <span className="text-lg">🎡 Roda da Fortuna</span>
+          </label>
+          <label className="flex items-center gap-3 cursor-pointer bg-gray-50 p-4 rounded-lg border-2 border-gray-200 hover:border-blue-400 transition-colors">
+            <input
+              type="checkbox"
+              checked={enabledGames.includes('scratch_card')}
+              onChange={() => toggleGame('scratch_card')}
+              className="w-5 h-5"
+            />
+            <span className="text-lg">🎫 Raspadinha</span>
+          </label>
+          <label className="flex items-center gap-3 cursor-pointer bg-gray-50 p-4 rounded-lg border-2 border-gray-200 hover:border-blue-400 transition-colors">
+            <input
+              type="checkbox"
+              checked={enabledGames.includes('quiz')}
+              onChange={() => toggleGame('quiz')}
+              className="w-5 h-5"
+            />
+            <span className="text-lg">🧠 Quiz</span>
+          </label>
+        </div>
+      </div>
 
       {/* Tabs */}
       <div className="flex gap-2 mb-6 border-b-2">
@@ -317,6 +379,49 @@ const GamesConfiguration: React.FC = () => {
           <p className="text-gray-600 mb-4">
             Configure os prêmios, probabilidades e quantidades
           </p>
+
+          {/* Upload de Imagem de Fundo */}
+          <div className="bg-blue-50 p-6 rounded-lg shadow mb-6 border-2 border-blue-200">
+            <h3 className="text-lg font-semibold mb-3 text-gray-700">🖼️ Imagem de Fundo (Opcional)</h3>
+            <p className="text-sm text-gray-600 mb-3">
+              Faça upload de uma imagem que será exibida atrás da camada de raspagem
+            </p>
+            <div className="flex gap-4 items-start">
+              <div className="flex-1">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        const newGamesConfig = {
+                          ...tenantConfig.games_config,
+                          scratch_card: {
+                            ...tenantConfig.games_config.scratch_card,
+                            background_image: reader.result as string
+                          }
+                        };
+                        setGamesConfig(newGamesConfig);
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                  className="w-full text-sm"
+                />
+              </div>
+              {tenantConfig.games_config.scratch_card.background_image && (
+                <div className="w-32 h-32 border-2 border-gray-300 rounded overflow-hidden">
+                  <img 
+                    src={tenantConfig.games_config.scratch_card.background_image} 
+                    alt="Preview" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
 
           {scratchPrizes.map((prize, index) => (
             <div key={prize.id} className="bg-white p-6 rounded-lg shadow mb-4">

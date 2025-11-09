@@ -73,6 +73,25 @@ const AppContent: React.FC = () => {
     }
   }, [tenantConfig]);
 
+  // Bootstrap tenant configuration - MOVIDO PARA ANTES DOS RETURNS
+  useEffect(() => {
+    const bootstrapTenant = async () => {
+      if (isConfigured) return;
+
+      try {
+        const tenantId = await tenantService.resolveActiveTenantId();
+        if (tenantId) {
+          console.log('🔁 [App] Tenant ativo encontrado, carregando...', tenantId);
+          await loadTenant(tenantId);
+        }
+      } catch (error) {
+        console.warn('⚠️ [App] Falha ao carregar tenant ativo:', error);
+      }
+    };
+
+    void bootstrapTenant();
+  }, [isConfigured, loadTenant]);
+
   // Show loading state while checking first run
   if (isFirstRun === null) {
     return (
@@ -103,25 +122,6 @@ const AppContent: React.FC = () => {
       </div>
     );
   }
-
-  // Bootstrap tenant configuration
-  useEffect(() => {
-    const bootstrapTenant = async () => {
-      if (isConfigured) return;
-
-      try {
-        const tenantId = await tenantService.resolveActiveTenantId();
-        if (tenantId) {
-          console.log('🔁 [App] Tenant ativo encontrado, carregando...', tenantId);
-          await loadTenant(tenantId);
-        }
-      } catch (error) {
-        console.warn('⚠️ [App] Falha ao carregar tenant ativo:', error);
-      }
-    };
-
-    void bootstrapTenant();
-  }, [isConfigured, loadTenant]);
 
   // Wait until the store is rehydrated from localStorage
   if (!_hasHydrated) {

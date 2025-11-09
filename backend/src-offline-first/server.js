@@ -86,13 +86,14 @@ setTimeout(() => {
 }, 5000);
 
 // Iniciar servidor
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log('\n╔════════════════════════════════════════════════════════════╗');
   console.log('║                                                            ║');
   console.log('║   🚀 Servidor Offline-First InterativeLeads               ║');
   console.log('║                                                            ║');
   console.log('╚════════════════════════════════════════════════════════════╝');
   console.log(`\n✅ Servidor rodando em: http://localhost:${PORT}`);
+  console.log(`🌐 Servidor também acessível em: http://0.0.0.0:${PORT}`);
   console.log(`✅ Health check: http://localhost:${PORT}/health`);
   console.log(`✅ Endpoint de leads: http://localhost:${PORT}/api/leads`);
   console.log(`✅ Endpoint de tenants: http://localhost:${PORT}/api/tenants`);
