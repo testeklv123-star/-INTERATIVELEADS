@@ -3,7 +3,7 @@
 ![Version](https://img.shields.io/badge/version-1.0.0-blue)
 ![Electron](https://img.shields.io/badge/electron-38.4.0-47848f)
 ![React](https://img.shields.io/badge/react-19.2.0-61dafb)
-![SQLite](https://img.shields.io/badge/sqlite-better--sqlite3-003b57)
+![SQLite](https://img.shields.io/badge/sqlite-sqlite3-003b57)
 
 **Sistema Profissional de Captação de Leads Interativo para Totens**
 
@@ -440,7 +440,7 @@ rm -rf node_modules
 npm install
 ```
 
-### Problema: "better-sqlite3 não compila"
+### Problema: "sqlite3 não compila"
 
 **Solução:**
 ```bash
@@ -448,7 +448,7 @@ npm install
 npm install --global windows-build-tools
 
 # Rebuild o módulo
-npm rebuild better-sqlite3
+npm rebuild sqlite3
 ```
 
 ---

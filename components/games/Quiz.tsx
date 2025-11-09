@@ -48,15 +48,15 @@ const Quiz: React.FC = () => {
 
     if (isFinished) {
         return (
-             <div className="w-full h-screen flex flex-col justify-center items-center text-center p-8" style={{backgroundColor: 'var(--color-background)'}}>
-                <h1 className="text-5xl font-bold mb-4" style={{color: 'var(--color-primary)'}}>Quiz Concluído!</h1>
-                <p className="text-3xl mb-8" style={{color: 'var(--color-text-secondary)'}}>
+             <div className="w-full min-h-screen flex flex-col justify-center items-center text-center p-4 md:p-8 py-8 overflow-auto" style={{backgroundColor: 'var(--color-background)'}}>
+                <h1 className="text-3xl md:text-5xl font-bold mb-4" style={{color: 'var(--color-primary)'}}>Quiz Concluído!</h1>
+                <p className="text-2xl md:text-3xl mb-6 md:mb-8" style={{color: 'var(--color-text-secondary)'}}>
                     Sua pontuação final é:
                 </p>
-                <p className="text-8xl font-bold" style={{color: 'var(--color-accent)'}}>
+                <p className="text-6xl md:text-8xl font-bold mb-6 md:mb-8" style={{color: 'var(--color-accent)'}}>
                     {score}/{questions.length}
                 </p>
-                <Button onClick={() => navigate('/thank-you')} className="mt-12">
+                <Button onClick={() => navigate('/thank-you')} className="mt-6 md:mt-12 mb-8">
                     CONTINUAR
                 </Button>
             </div>
@@ -64,12 +64,12 @@ const Quiz: React.FC = () => {
     }
 
     return (
-        <div className="w-full h-screen flex flex-col justify-center items-center p-8" style={{backgroundColor: 'var(--color-background)'}}>
+        <div className="w-full min-h-screen flex flex-col justify-center items-center p-4 md:p-8 py-8 overflow-auto" style={{backgroundColor: 'var(--color-background)'}}>
             <div className="w-full max-w-4xl text-center">
-                 <p className="text-2xl mb-4" style={{color: 'var(--color-text-secondary)'}}>
+                 <p className="text-xl md:text-2xl mb-3 md:mb-4" style={{color: 'var(--color-text-secondary)'}}>
                     Pergunta {currentQuestionIndex + 1} de {questions.length}
                 </p>
-                <h2 className="text-4xl font-bold mb-12" style={{color: 'var(--color-text)'}}>
+                <h2 className="text-2xl md:text-4xl font-bold mb-6 md:mb-12" style={{color: 'var(--color-text)'}}>
                     {currentQuestion.question}
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -100,7 +100,7 @@ const Quiz: React.FC = () => {
                 </div>
 
                 {isAnswered && (
-                     <div className="mt-12 animate-fade-in">
+                     <div className="mt-6 md:mt-12 mb-8 animate-fade-in">
                         <Button onClick={handleNext}>
                             {currentQuestionIndex < questions.length - 1 ? 'PRÓXIMA PERGUNTA' : 'FINALIZAR QUIZ'}
                         </Button>

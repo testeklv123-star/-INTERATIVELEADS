@@ -50,6 +50,11 @@ export interface ElectronAPI {
   getUserDataPath: () => Promise<{ success: boolean; data?: string; error?: string }>;
   
   onAppReady: (callback: (data: any) => void) => void;
+  
+  // Display/Responsiveness methods
+  onDisplayInfo?: (callback: (displayInfo: { width: number; height: number; scaleFactor: number }) => void) => void;
+  onWindowResized?: (callback: (size: { width: number; height: number }) => void) => void;
+  removeDisplayListeners?: () => void;
 }
 
 declare global {

@@ -166,6 +166,97 @@ export const fallbackTenants: TenantConfig[] = [
       }
     },
     behavior: { inactivity_timeout: 45, auto_return_home: true, show_lead_count: false, collect_photo: false, admin_password: '2025' }
+  },
+  {
+    tenant_id: 'academia_fit_001',
+    brand_name: 'Academia Fit',
+    theme: {
+      colors: {
+        primary: '#00C853',      // Verde vibrante
+        secondary: '#1976D2',    // Azul
+        accent: '#FFD600',       // Amarelo
+        background: '#FFFFFF',
+        text: '#1A1A1A',
+        text_secondary: '#666666',
+        success: '#00C853',
+        error: '#D32F2F',
+        button_primary_bg: '#00C853',
+        button_primary_text: '#FFFFFF',
+        button_secondary_bg: '#1976D2',
+        button_secondary_text: '#FFFFFF'
+      },
+      typography: {
+        font_primary: 'Roboto',
+        font_secondary: 'Open Sans',
+        heading_weight: '700',
+        body_weight: '400'
+      },
+      logos: {
+        main_logo_url: '/logos/tech-store-main.svg',      // Você pode trocar depois
+        center_logo_url: '/logos/tech-store-icon.svg',    // Você pode trocar depois
+        watermark_url: '/logos/tech-store-icon.svg'       // Você pode trocar depois
+      },
+      spacing: {
+        border_radius: '12px',
+        padding_base: '16px'
+      }
+    },
+    content: {
+      welcome_title: 'Bem-vindo à Academia Fit!',
+      welcome_subtitle: 'Participe e ganhe prêmios especiais',
+      form_title: 'Cadastre-se e participe',
+      form_subtitle: 'Preencha seus dados e concorra a prêmios',
+      thank_you_message: 'Parabéns! Seu prêmio será enviado por e-mail.',
+      privacy_notice: 'Seus dados estão seguros conosco. Política de privacidade disponível no site.'
+    },
+    games_config: {
+      enabled_games: ['prize_wheel', 'scratch_card'],
+      prize_wheel: {
+        prizes: [
+          { id: 'p1', label: '1 Mês Free', name: '1 Mês de academia grátis', probability: 10, color: '#00C853', quantity_available: 20, quantity_total: 20, times_won: 0 },
+          { id: 'p2', label: '15% OFF', name: '15% de desconto na matrícula', probability: 30, color: '#1976D2', quantity_available: 50, quantity_total: 50, times_won: 0 },
+          { id: 'p3', label: 'Kit Fit', name: 'Kit com garrafa e toalha', probability: 40, color: '#FFD600', quantity_available: 100, quantity_total: 100, times_won: 0 },
+          { id: 'p4', label: 'Personal', name: '2 aulas com personal trainer', probability: 20, color: '#FF6D00', quantity_available: 30, quantity_total: 30, times_won: 0 }
+        ]
+      },
+      scratch_card: {
+        overlay_color: '#00C853',
+        prizes: [
+          { id: 's1', name: '10% de desconto', probability: 40, quantity_available: 100, quantity_total: 100, times_won: 0 },
+          { id: 's2', name: 'Aula experimental grátis', probability: 30, quantity_available: 80, quantity_total: 80, times_won: 0 },
+          { id: 's3', name: 'Avaliação física gratuita', probability: 20, quantity_available: 50, quantity_total: 50, times_won: 0 },
+          { id: 's4', name: '1 semana grátis', probability: 10, quantity_available: 20, quantity_total: 20, times_won: 0 }
+        ]
+      },
+      quiz: {
+        questions: [
+          { id: 'q1', question: 'Quantas vezes por semana você treina?', options: ['1-2 vezes', '3-4 vezes', '5+ vezes', 'Não treino'], correct: 1 },
+          { id: 'q2', question: 'Qual seu objetivo principal?', options: ['Emagrecer', 'Ganhar massa', 'Saúde', 'Performance'], correct: 2 }
+        ],
+        prize_rules: [
+          { min_correct: 0, max_correct: 0, prize_name: 'Consulta nutricional', quantity_available: 50 },
+          { min_correct: 1, max_correct: 1, prize_name: '5% de desconto', quantity_available: 30 },
+          { min_correct: 2, max_correct: 2, prize_name: '1 semana grátis', quantity_available: 15 }
+        ]
+      }
+    },
+    form_fields: {
+      required: ['name', 'email', 'phone'],
+      optional: [],
+      custom_field: {
+        enabled: true,
+        label: 'Objetivo principal',
+        type: 'select',
+        options: ['Emagrecimento', 'Hipertrofia', 'Saúde e bem-estar', 'Performance esportiva', 'Outro']
+      }
+    },
+    behavior: { 
+      inactivity_timeout: 30, 
+      auto_return_home: true, 
+      show_lead_count: false, 
+      collect_photo: false, 
+      admin_password: 'fit123' 
+    }
   }
 ];
 

@@ -376,7 +376,8 @@ ipcMain.handle('delete-lead', async (event, leadId) => {
 ipcMain.handle('get-roulette-prizes', async () => {
   console.log('🎰 [BACKEND] get-roulette-prizes chamado');
   try {
-    const prizes = await getAllPrizes();
+    const db = getDb();
+    const prizes = await getAllPrizes(db);
     console.log(`✅ [BACKEND] ${prizes.length} prêmio(s) encontrado(s)`);
     return { success: true, data: prizes };
   } catch (error) {
@@ -389,7 +390,8 @@ ipcMain.handle('get-roulette-prizes', async () => {
 ipcMain.handle('get-random-prize', async () => {
   console.log('🎲 [BACKEND] get-random-prize chamado');
   try {
-    const prize = await getRandomPrize();
+    const db = getDb();
+    const prize = await getRandomPrize(db);
     console.log(`✅ [BACKEND] Prêmio sorteado: ${prize.name}`);
     return { success: true, data: prize };
   } catch (error) {
@@ -402,7 +404,8 @@ ipcMain.handle('get-random-prize', async () => {
 ipcMain.handle('save-spin-result', async (event, leadId, prizeId) => {
   console.log(`💾 [BACKEND] save-spin-result chamado: Lead ${leadId}, Prêmio ${prizeId}`);
   try {
-    const result = await saveSpinResult(leadId, prizeId);
+    const db = getDb();
+    const result = await saveSpinResult(db, leadId, prizeId);
     console.log(`✅ [BACKEND] Resultado do giro salvo com sucesso`);
     return { success: true, data: result };
   } catch (error) {

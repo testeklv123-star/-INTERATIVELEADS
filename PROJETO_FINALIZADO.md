@@ -71,7 +71,7 @@
 ⚛️ React 19.2.0
 ⚡ Electron 38.4.0
 📘 TypeScript 5.8.2
-🗄️ SQLite (better-sqlite3)
+🗄️ SQLite (sqlite3)
 🎨 Framer Motion (animações)
 🔄 Zustand (state management)
 ```

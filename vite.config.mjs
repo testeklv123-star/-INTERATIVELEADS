@@ -29,7 +29,7 @@ export default defineConfig(({ mode }) => {
         outDir: 'dist',
         emptyOutDir: true,
         rollupOptions: {
-          external: ['electron', 'better-sqlite3']
+          external: ['electron', 'sqlite3']
         }
       }
     };

@@ -47,6 +47,18 @@ contextBridge.exposeInMainWorld('electronAPI', {
   
   // Eventos
   onAppReady: (callback) => ipcRenderer.on('app-ready', callback),
+  
+  // Eventos de Display/Resolução
+  onDisplayInfo: (callback) => {
+    ipcRenderer.on('display-info', (event, displayInfo) => callback(displayInfo));
+  },
+  onWindowResized: (callback) => {
+    ipcRenderer.on('window-resized', (event, size) => callback(size));
+  },
+  removeDisplayListeners: () => {
+    ipcRenderer.removeAllListeners('display-info');
+    ipcRenderer.removeAllListeners('window-resized');
+  },
 });
 
 console.log('✅ [Preload] API do Electron exposta com sucesso');

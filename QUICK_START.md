@@ -121,13 +121,13 @@ npm run dev -- --port 5001
 npm run electron:dev
 ```
 
-### "Erro ao instalar better-sqlite3"
+### "Erro ao instalar sqlite3"
 ```bash
 # Windows: Instale ferramentas de build
 npm install --global windows-build-tools
 
 # Depois:
-npm rebuild better-sqlite3
+npm rebuild sqlite3
 ```
 
 ### "App não abre após build"

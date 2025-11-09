@@ -126,10 +126,10 @@ release/
 ### Build demora muito
 **Normal:** Primeira vez pode levar 5-10 minutos (baixa dependências do Electron)
 
-### "better-sqlite3" erro de compilação
+### "sqlite3" erro de compilação
 ```bash
 # Execute como Admin:
-npm rebuild better-sqlite3
+npm rebuild sqlite3
 ```
 
 ---

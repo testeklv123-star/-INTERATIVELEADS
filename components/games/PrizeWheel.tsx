@@ -71,24 +71,24 @@ const PrizeWheel: React.FC = () => {
   const sliceAngle = 360 / prizes.length;
 
   return (
-    <div className="w-full h-screen flex flex-col justify-center items-center p-8 overflow-hidden" style={{backgroundColor: 'var(--color-background)'}}>
-      <h1 className="text-5xl font-bold mb-12" style={{color: 'var(--color-primary)'}}>Gire a Roda da Fortuna!</h1>
+    <div className="w-full min-h-screen flex flex-col justify-center items-center p-4 md:p-8 py-8 overflow-auto" style={{backgroundColor: 'var(--color-background)'}}>
+      <h1 className="text-3xl md:text-5xl font-bold mb-4 md:mb-8" style={{color: 'var(--color-primary)'}}>Gire a Roda da Fortuna!</h1>
       
-      <div className="relative flex justify-center items-center mb-12">
+      <div className="relative flex justify-center items-center mb-4 md:mb-8 w-full max-w-[90vmin] aspect-square">
         <div 
-            className="absolute top-[-25px] z-10 w-0 h-0"
+            className="absolute top-[-20px] md:top-[-25px] z-10 w-0 h-0"
             style={{
-                borderLeft: '25px solid transparent',
-                borderRight: '25px solid transparent',
-                borderTop: '50px solid var(--color-accent)'
+                borderLeft: '20px solid transparent',
+                borderRight: '20px solid transparent',
+                borderTop: '40px solid var(--color-accent)'
             }}
         />
 
         <div 
-          className="relative transition-transform duration-[6000ms] ease-out"
+          className="relative transition-transform duration-[6000ms] ease-out w-full h-full"
           style={{ transform: `rotate(${rotation}deg)` }}
         >
-          <svg width={wheelSize} height={wheelSize} viewBox={`0 0 ${wheelSize} ${wheelSize}`}>
+          <svg width="100%" height="100%" viewBox={`0 0 ${wheelSize} ${wheelSize}`} className="w-full h-full">
             {prizes.map((prize, index) => (
               <g key={prize.id}>
                 <path d={getPath(sliceAngle, wheelSize, index)} fill={prize.color} />
@@ -107,14 +107,16 @@ const PrizeWheel: React.FC = () => {
             ))}
           </svg>
           <div className="absolute inset-0 flex justify-center items-center">
-             <DynamicLogo type="center" className="w-40 h-40 object-contain rounded-full bg-white p-2 shadow-lg"/>
+             <DynamicLogo type="center" className="w-24 h-24 md:w-40 md:h-40 object-contain rounded-full bg-white p-2 shadow-lg"/>
           </div>
         </div>
       </div>
       
-      <Button onClick={spinWheel} disabled={isSpinning}>
-        {isSpinning ? 'GIRANDO...' : 'GIRAR!'}
-      </Button>
+      <div className="mb-8">
+        <Button onClick={spinWheel} disabled={isSpinning}>
+          {isSpinning ? 'GIRANDO...' : 'GIRAR!'}
+        </Button>
+      </div>
 
       <Modal
         isOpen={!!wonPrize}

@@ -6,7 +6,7 @@
 ![Electron](https://img.shields.io/badge/electron-38.4.0-47848f)
 ![React](https://img.shields.io/badge/react-19.2.0-61dafb)
 ![TypeScript](https://img.shields.io/badge/typescript-5.8.2-3178c6)
-![SQLite](https://img.shields.io/badge/sqlite-better--sqlite3-003b57)
+![SQLite](https://img.shields.io/badge/sqlite-sqlite3-003b57)
 
 ---
 
@@ -256,10 +256,10 @@ npm run electron:build:linux # Gerar AppImage Linux
 **Problema:** "Cannot create symbolic link"  
 **Solução:** Execute PowerShell como Administrador
 
-### Erro: better-sqlite3 não compila
+### Erro: sqlite3 não compila
 ```bash
 npm install --global windows-build-tools
-npm rebuild better-sqlite3
+npm rebuild sqlite3
 ```
 
 ### App não abre após build

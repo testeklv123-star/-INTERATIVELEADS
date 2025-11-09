@@ -128,10 +128,10 @@ const ScratchCard: React.FC = () => {
     const backgroundImage = tenantConfig?.games_config.scratch_card.background_image;
 
     return (
-        <div className="w-full h-screen flex flex-col justify-center items-center p-8 overflow-hidden" style={{backgroundColor: 'var(--color-background)'}}>
-            <h1 className="text-5xl font-bold mb-12 text-center" style={{color: 'var(--color-primary)'}}>Raspadinha Premiada!</h1>
+        <div className="w-full min-h-screen flex flex-col justify-center items-center p-4 md:p-8 py-8 overflow-auto" style={{backgroundColor: 'var(--color-background)'}}>
+            <h1 className="text-3xl md:text-5xl font-bold mb-6 md:mb-12 text-center" style={{color: 'var(--color-primary)'}}>Raspadinha Premiada!</h1>
 
-            <div className="relative w-full max-w-2xl aspect-[1.618] shadow-2xl" style={{borderRadius: 'var(--border-radius)'}}>
+            <div className="relative w-full max-w-xl md:max-w-2xl aspect-[1.618] shadow-2xl" style={{borderRadius: 'var(--border-radius)'}}>
                 {backgroundImage ? (
                     <div 
                         className="absolute inset-0 flex justify-center items-center text-center p-4"
@@ -180,7 +180,7 @@ const ScratchCard: React.FC = () => {
                 />
             </div>
             
-            <div className={`mt-12 transition-opacity duration-500 ${isRevealed ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+            <div className={`mt-6 md:mt-12 mb-8 transition-opacity duration-500 ${isRevealed ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
                 <Button onClick={() => navigate('/thank-you')}>
                     CONTINUAR
                 </Button>

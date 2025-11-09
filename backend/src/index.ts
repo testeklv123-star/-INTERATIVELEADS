@@ -7,6 +7,7 @@ import { env } from './config/env';
 import { AppDataSource } from './db/data-source';
 import { buildTenantRouter } from './modules/tenant';
 import { buildAuthRouter } from './modules/auth';
+import licenseRoutes from './modules/license/license.routes';
 import { AppError } from './errors/appError';
 
 const app = express();
@@ -31,6 +32,7 @@ app.get('/health', (_req: Request, res: Response) => {
 
 app.use('/auth', buildAuthRouter(AppDataSource));
 app.use('/tenants', buildTenantRouter(AppDataSource));
+app.use('/api/licenses', licenseRoutes);
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {

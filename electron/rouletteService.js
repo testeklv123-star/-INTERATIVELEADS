@@ -1,12 +1,14 @@
 // electron/rouletteService.js
-const { getDb } = require('./database');
 
 /**
  * Cria as tabelas necessárias para a roleta de prêmios
+ * @param {Object} db - Instância do banco de dados SQLite
  */
-function createRouletteTables() {
+function createRouletteTables(db) {
   return new Promise((resolve, reject) => {
-    const db = getDb();
+    if (!db) {
+      return reject(new Error('Database instance is required'));
+    }
     
     db.serialize(() => {
       // Tabela de prêmios da roleta
@@ -65,10 +67,13 @@ function createRouletteTables() {
 
 /**
  * Popula a tabela de prêmios com dados iniciais
+ * @param {Object} db - Instância do banco de dados SQLite
  */
-function seedPrizes() {
+function seedPrizes(db) {
   return new Promise((resolve, reject) => {
-    const db = getDb();
+    if (!db) {
+      return reject(new Error('Database instance is required'));
+    }
 
     // Verifica se já existem prêmios
     db.get('SELECT COUNT(*) as count FROM roulette_prizes', [], (err, row) => {
@@ -140,12 +145,15 @@ function seedPrizes() {
 
 /**
  * Salva o resultado de um giro da roleta
+ * @param {Object} db - Instância do banco de dados SQLite
  * @param {number} leadId - ID do lead que girou a roleta
  * @param {number} prizeId - ID do prêmio ganho
  */
-function saveSpinResult(leadId, prizeId) {
+function saveSpinResult(db, leadId, prizeId) {
   return new Promise((resolve, reject) => {
-    const db = getDb();
+    if (!db) {
+      return reject(new Error('Database instance is required'));
+    }
 
     const sql = `INSERT INTO lead_spins (lead_id, prize_id) VALUES (?, ?)`;
     
@@ -182,10 +190,13 @@ function saveSpinResult(leadId, prizeId) {
 
 /**
  * Busca todos os prêmios disponíveis
+ * @param {Object} db - Instância do banco de dados SQLite
  */
-function getAllPrizes() {
+function getAllPrizes(db) {
   return new Promise((resolve, reject) => {
-    const db = getDb();
+    if (!db) {
+      return reject(new Error('Database instance is required'));
+    }
 
     const sql = `SELECT * FROM roulette_prizes ORDER BY probability DESC`;
     
@@ -202,10 +213,13 @@ function getAllPrizes() {
 
 /**
  * Busca um prêmio aleatório baseado nas probabilidades
+ * @param {Object} db - Instância do banco de dados SQLite
  */
-function getRandomPrize() {
+function getRandomPrize(db) {
   return new Promise((resolve, reject) => {
-    const db = getDb();
+    if (!db) {
+      return reject(new Error('Database instance is required'));
+    }
 
     const sql = `SELECT * FROM roulette_prizes`;
     
@@ -240,11 +254,15 @@ function getRandomPrize() {
 
 /**
  * Inicializa o sistema de roleta (cria tabelas e popula com dados iniciais)
+ * @param {Object} db - Instância do banco de dados SQLite
  */
-async function initRouletteSystem() {
+async function initRouletteSystem(db) {
   try {
-    await createRouletteTables();
-    await seedPrizes();
+    if (!db) {
+      throw new Error('Database instance is required');
+    }
+    await createRouletteTables(db);
+    await seedPrizes(db);
     console.log('🎰 Sistema de roleta inicializado com sucesso!');
   } catch (error) {
     console.error('❌ Erro ao inicializar sistema de roleta:', error);

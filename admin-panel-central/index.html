@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Admin Central - White Label Totem</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1>🎯 Painel Admin Central</h1>
+                <p class="subtitle">Gerenciamento de Licenças e Clientes</p>
+            </div>
+            <button class="btn btn-secondary" onclick="logout()">Sair</button>
+        </header>
+
+        <!-- Estatísticas -->
+        <section class="stats-grid" id="statsSection">
+            <div class="stat-card">
+                <div class="stat-icon">✅</div>
+                <div class="stat-content">
+                    <h3 id="stat-active">0</h3>
+                    <p>Licenças Ativas</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📊</div>
+                <div class="stat-content">
+                    <h3 id="stat-total">0</h3>
+                    <p>Total de Licenças</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">⏰</div>
+                <div class="stat-content">
+                    <h3 id="stat-expired">0</h3>
+                    <p>Expiradas</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">⏸️</div>
+                <div class="stat-content">
+                    <h3 id="stat-suspended">0</h3>
+                    <p>Suspensas</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Ações -->
+        <section class="actions-bar">
+            <button class="btn btn-primary" onclick="showCreateModal()">
+                ➕ Nova Licença
+            </button>
+            <button class="btn btn-secondary" onclick="loadLicenses()">
+                🔄 Atualizar
+            </button>
+            <div class="filter-group">
+                <select id="statusFilter" onchange="loadLicenses()">
+                    <option value="">Todos os status</option>
+                    <option value="active">Ativas</option>
+                    <option value="expired">Expiradas</option>
+                    <option value="suspended">Suspensas</option>
+                    <option value="inactive">Inativas</option>
+                </select>
+            </div>
+        </section>
+
+        <!-- Tabela de Licenças -->
+        <section class="table-container">
+            <table class="licenses-table">
+                <thead>
+                    <tr>
+                        <th>Cliente</th>
+                        <th>Tenant ID</th>
+                        <th>Chave de Licença</th>
+                        <th>Tipo</th>
+                        <th>Status</th>
+                        <th>Expira em</th>
+                        <th>Dispositivos</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="licensesTableBody">
+                    <tr>
+                        <td colspan="8" class="loading">Carregando...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </div>
+
+    <!-- Modal: Criar Licença -->
+    <div id="createModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>➕ Nova Licença</h2>
+                <button class="close-btn" onclick="closeModal('createModal')">&times;</button>
+            </div>
+            <form id="createForm" onsubmit="createLicense(event)">
+                <div class="form-group">
+                    <label for="client_name">Nome do Cliente *</label>
+                    <input type="text" id="client_name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="tenant_id">Tenant ID *</label>
+                    <input type="text" id="tenant_id" placeholder="ex: loja_tech_sp_001" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="client_email">E-mail</label>
+                    <input type="email" id="client_email">
+                </div>
+                
+                <div class="form-group">
+                    <label for="client_phone">Telefone</label>
+                    <input type="tel" id="client_phone">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="license_type">Tipo de Licença *</label>
+                        <select id="license_type" required>
+                            <option value="trial">Trial (30 dias)</option>
+                            <option value="monthly">Mensal</option>
+                            <option value="yearly">Anual</option>
+                            <option value="lifetime">Vitalícia</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="max_devices">Máx. Dispositivos</label>
+                        <input type="number" id="max_devices" value="1" min="1">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="duration_days">Duração (dias) - opcional</label>
+                    <input type="number" id="duration_days" min="1" placeholder="Deixe vazio para usar padrão do tipo">
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('createModal')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Criar Licença</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Detalhes da Licença -->
+    <div id="detailsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📋 Detalhes da Licença</h2>
+                <button class="close-btn" onclick="closeModal('detailsModal')">&times;</button>
+            </div>
+            <div id="licenseDetails" class="details-content">
+                <!-- Conteúdo carregado dinamicamente -->
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
+

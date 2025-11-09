@@ -3,8 +3,11 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'r
 import { useTenantStore } from './stores/tenantStore';
 import { applyTheme } from './utils/themeApplier';
 import { useInactivityTimeout } from './hooks/useInactivityTimeout';
+import { useZoomControl } from './hooks/useZoomControl';
+import ResponsiveProvider from './components/common/ResponsiveProvider';
 import TenantSetup from './screens/TenantSetup';
 import TenantSelectionScreen from './screens/TenantSelectionScreen';
+import LicenseActivation from './screens/LicenseActivation';
 import AttractScreen from './screens/AttractScreen';
 import GameSelection from './screens/GameSelection';
 import LeadForm from './screens/LeadForm';
@@ -17,6 +20,7 @@ import PrizeManagement from './screens/admin/PrizeManagement';
 import GamesConfiguration from './screens/admin/GamesConfiguration';
 import tenantService from './services/tenantService';
 import electronService from './services/electronService';
+import licenseService from './services/licenseService';
 import type { ElectronAPI } from './services/electronService';
 
 declare global {
@@ -28,10 +32,53 @@ declare global {
 const AppContent: React.FC = () => {
   const { isConfigured, isLoading, tenantConfig, _hasHydrated, loadTenant } = useTenantStore();
   const [isFirstRun, setIsFirstRun] = useState<boolean | null>(null);
+  const [isLicenseValid, setIsLicenseValid] = useState<boolean | null>(null);
   const location = useLocation();
   
   // Ativar timeout de inatividade
   useInactivityTimeout();
+  
+  // Ativar controle de zoom com Ctrl+Scroll
+  useZoomControl();
+
+  // Check license validity
+  useEffect(() => {
+    const checkLicense = async () => {
+      try {
+        const cachedLicense = licenseService.getCachedLicenseInfo();
+        
+        if (cachedLicense) {
+          console.log('🔐 [App] Licença encontrada no cache');
+          
+          // Valida a licença em background
+          try {
+            const result = await licenseService.validate(cachedLicense.license_key);
+            setIsLicenseValid(result.valid);
+            
+            if (!result.valid) {
+              console.warn('⚠️ [App] Licença inválida, necessário reativar');
+            }
+          } catch (error) {
+            // Se falhar online, mas tem cache válido, continua
+            if (licenseService.hasValidCache()) {
+              console.log('✅ [App] Usando licença do cache (offline)');
+              setIsLicenseValid(true);
+            } else {
+              setIsLicenseValid(false);
+            }
+          }
+        } else {
+          console.log('⚠️ [App] Nenhuma licença encontrada');
+          setIsLicenseValid(false);
+        }
+      } catch (error) {
+        console.error('❌ [App] Erro ao verificar licença:', error);
+        setIsLicenseValid(false);
+      }
+    };
+
+    checkLicense();
+  }, []);
 
   // Check if it's the first run
   useEffect(() => {
@@ -92,8 +139,8 @@ const AppContent: React.FC = () => {
     void bootstrapTenant();
   }, [isConfigured, loadTenant]);
 
-  // Show loading state while checking first run
-  if (isFirstRun === null) {
+  // Show loading state while checking license and first run
+  if (isLicenseValid === null || isFirstRun === null) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
@@ -101,6 +148,19 @@ const AppContent: React.FC = () => {
           <p className="mt-4 text-gray-600">Inicializando...</p>
         </div>
       </div>
+    );
+  }
+
+  // Show license activation if not valid
+  if (!isLicenseValid) {
+    return (
+      <LicenseActivation 
+        onSuccess={(tenantId) => {
+          console.log('✅ [App] Licença ativada, carregando tenant:', tenantId);
+          setIsLicenseValid(true);
+          void loadTenant(tenantId);
+        }} 
+      />
     );
   }
 
@@ -175,9 +235,11 @@ const AppContent: React.FC = () => {
 
 const App: React.FC = () => {
   return (
-    <Router>
-      <AppContent />
-    </Router>
+    <ResponsiveProvider>
+      <Router>
+        <AppContent />
+      </Router>
+    </ResponsiveProvider>
   );
 };
 

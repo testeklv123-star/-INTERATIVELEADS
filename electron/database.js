@@ -50,8 +50,8 @@ function initDatabase() {
           createTables()
             .then(() => {
               console.log('🎉 Banco de dados inicializado com sucesso.');
-              // Inicializa o sistema de roleta
-              return initRouletteSystem();
+              // Inicializa o sistema de roleta passando a instância do db
+              return initRouletteSystem(db);
             })
             .then(() => {
               resolve();
