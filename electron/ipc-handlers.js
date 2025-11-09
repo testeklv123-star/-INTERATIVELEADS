@@ -1,6 +1,7 @@
 // electron/ipc-handlers.js
 const { ipcMain } = require('electron');
 const { getDb } = require('./database');
+const { getAllPrizes, getRandomPrize, saveSpinResult } = require('./rouletteService');
 
 // Helpers para Promises
 const runQuery = (sql, params = []) => new Promise((resolve, reject) => {
@@ -365,6 +366,47 @@ ipcMain.handle('delete-lead', async (event, leadId) => {
     return { success: true };
   } catch (error) {
     console.error('❌ [BACKEND] Erro ao deletar lead:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// ==================== ROULETTE HANDLERS ====================
+
+// Handler para buscar todos os prêmios da roleta
+ipcMain.handle('get-roulette-prizes', async () => {
+  console.log('🎰 [BACKEND] get-roulette-prizes chamado');
+  try {
+    const prizes = await getAllPrizes();
+    console.log(`✅ [BACKEND] ${prizes.length} prêmio(s) encontrado(s)`);
+    return { success: true, data: prizes };
+  } catch (error) {
+    console.error('❌ [BACKEND] Erro ao buscar prêmios:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// Handler para sortear um prêmio aleatório
+ipcMain.handle('get-random-prize', async () => {
+  console.log('🎲 [BACKEND] get-random-prize chamado');
+  try {
+    const prize = await getRandomPrize();
+    console.log(`✅ [BACKEND] Prêmio sorteado: ${prize.name}`);
+    return { success: true, data: prize };
+  } catch (error) {
+    console.error('❌ [BACKEND] Erro ao sortear prêmio:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// Handler para salvar resultado do giro
+ipcMain.handle('save-spin-result', async (event, leadId, prizeId) => {
+  console.log(`💾 [BACKEND] save-spin-result chamado: Lead ${leadId}, Prêmio ${prizeId}`);
+  try {
+    const result = await saveSpinResult(leadId, prizeId);
+    console.log(`✅ [BACKEND] Resultado do giro salvo com sucesso`);
+    return { success: true, data: result };
+  } catch (error) {
+    console.error('❌ [BACKEND] Erro ao salvar resultado do giro:', error);
     return { success: false, error: error.message };
   }
 });

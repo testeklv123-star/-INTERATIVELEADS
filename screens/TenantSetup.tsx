@@ -88,7 +88,9 @@ const TenantSetup: React.FC = () => {
           <div className="rounded-md bg-green-50 p-4">
             <div className="flex">
               <div className="flex-shrink-0">
-                <FiCheckCircle className="h-5 w-5 text-green-400" aria-hidden="true" />
+                <span className="h-5 w-5 text-green-400" aria-hidden="true">
+                  <FiCheckCircle />
+                </span>
               </div>
               <div className="ml-3">
                 <p className="text-sm font-medium text-green-800">
@@ -123,7 +125,9 @@ const TenantSetup: React.FC = () => {
                   />
                   {errors.tenant_id && (
                     <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                      <FiAlertCircle className="h-5 w-5 text-red-500" />
+                      <span className="h-5 w-5 text-red-500">
+                        <FiAlertCircle />
+                      </span>
                     </div>
                   )}
                 </div>
@@ -157,9 +161,11 @@ const TenantSetup: React.FC = () => {
                     })}
                   />
                   {errors.brand_name && (
-                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                      <FiAlertCircle className="h-5 w-5 text-red-500" />
-                    </div>
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                    <span className="h-5 w-5 text-red-500">
+                      <FiAlertCircle />
+                    </span>
+                  </div>
                   )}
                 </div>
                 {errors.brand_name && (
@@ -198,7 +204,9 @@ const TenantSetup: React.FC = () => {
                   />
                   {errors.admin_password && (
                     <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                      <FiAlertCircle className="h-5 w-5 text-red-500" />
+                      <span className="h-5 w-5 text-red-500">
+                        <FiAlertCircle />
+                      </span>
                     </div>
                   )}
                 </div>
@@ -230,7 +238,9 @@ const TenantSetup: React.FC = () => {
                   />
                   {errors.confirm_password && (
                     <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                      <FiAlertCircle className="h-5 w-5 text-red-500" />
+                      <span className="h-5 w-5 text-red-500">
+                        <FiAlertCircle />
+                      </span>
                     </div>
                   )}
                 </div>
@@ -244,7 +254,9 @@ const TenantSetup: React.FC = () => {
               <div className="rounded-md bg-red-50 p-4">
                 <div className="flex">
                   <div className="flex-shrink-0">
-                    <FiAlertCircle className="h-5 w-5 text-red-400" aria-hidden="true" />
+                    <span className="h-5 w-5 text-red-400" aria-hidden="true">
+                      <FiAlertCircle />
+                    </span>
                   </div>
                   <div className="ml-3">
                     <h3 className="text-sm font-medium text-red-800">
@@ -265,7 +277,9 @@ const TenantSetup: React.FC = () => {
               >
                 {isSubmitting ? (
                   <>
-                    <FiLoader className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" />
+                    <span className="-ml-1 mr-2 h-4 w-4 text-white">
+                      <FiLoader />
+                    </span>
                     Criando...
                   </>
                 ) : (

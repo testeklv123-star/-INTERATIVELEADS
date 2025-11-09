@@ -3,6 +3,7 @@ const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const fs = require('fs');
 const { app } = require('electron');
+const { initRouletteSystem } = require('./rouletteService');
 
 let db;
 let dbPath;
@@ -49,6 +50,10 @@ function initDatabase() {
           createTables()
             .then(() => {
               console.log('🎉 Banco de dados inicializado com sucesso.');
+              // Inicializa o sistema de roleta
+              return initRouletteSystem();
+            })
+            .then(() => {
               resolve();
             })
             .catch(reject);

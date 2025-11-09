@@ -30,6 +30,11 @@ export interface ElectronAPI {
   getPrize: (prizeId: string) => Promise<{ success: boolean; data?: any; error?: string }>;
   deletePrize: (tenantId: string, prizeId: string) => Promise<{ success: boolean; error?: string }>;
   
+  // Roulette methods
+  getRoulettePrizes: () => Promise<{ success: boolean; data?: any[]; error?: string }>;
+  getRandomPrize: () => Promise<{ success: boolean; data?: any; error?: string }>;
+  saveSpinResult: (leadId: number, prizeId: number) => Promise<{ success: boolean; data?: any; error?: string }>;
+  
   getStats: (tenantId: string) => Promise<{ success: boolean; data?: any; error?: string }>;
   
   exportData: () => Promise<{ success: boolean; data?: any; error?: string }>;
@@ -221,6 +226,40 @@ class ElectronService {
       throw new Error('Electron API não disponível');
     }
     return window.electronAPI!.deletePrize(tenantId, prizeId);
+  }
+
+  // ==================== ROLETA ====================
+
+  /**
+   * Busca todos os prêmios da roleta
+   */
+  async getRoulettePrizes() {
+    if (!this.isElectron) {
+      throw new Error('Electron API não disponível');
+    }
+    return this.invoke('get-roulette-prizes');
+  }
+
+  /**
+   * Sorteia um prêmio aleatório baseado nas probabilidades
+   */
+  async getRandomPrize() {
+    if (!this.isElectron) {
+      throw new Error('Electron API não disponível');
+    }
+    return this.invoke('get-random-prize');
+  }
+
+  /**
+   * Salva o resultado de um giro da roleta
+   * @param leadId ID do lead que girou a roleta
+   * @param prizeId ID do prêmio ganho
+   */
+  async saveSpinResult(leadId: number, prizeId: number) {
+    if (!this.isElectron) {
+      throw new Error('Electron API não disponível');
+    }
+    return this.invoke('save-spin-result', leadId, prizeId);
   }
 
   // ==================== ESTATÍSTICAS ====================

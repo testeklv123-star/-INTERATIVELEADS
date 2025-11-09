@@ -40,6 +40,7 @@ export interface GamesConfig {
   };
   scratch_card: {
     overlay_color: string;
+    background_image?: string;
     prizes: ScratchCardPrize[];
   };
   quiz: {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTenantStore } from '../stores/tenantStore';
@@ -8,6 +8,8 @@ import Input from '../components/common/Input';
 import { saveLead } from '../services/apiService';
 import electronService from '../services/electronService';
 import useLeadSessionStore from '../stores/leadSessionStore';
+import Roulette from '../components/games/Roulette';
+import { LeadData } from '../types';
 
 type Inputs = {
   name: string;
@@ -17,6 +19,14 @@ type Inputs = {
   custom_field?: string;
 };
 
+interface Prize {
+  id: number;
+  name: string;
+  image_url: string;
+  color: string;
+  probability: number;
+}
+
 const LeadForm: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -24,10 +34,36 @@ const LeadForm: React.FC = () => {
   const { register, handleSubmit, formState: { errors } } = useForm<Inputs>();
   const startSession = useLeadSessionStore((state) => state.startSession);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Estados da roleta
+  const [showRoulette, setShowRoulette] = useState(false);
+  const [prizes, setPrizes] = useState<Prize[]>([]);
+  const [winningPrize, setWinningPrize] = useState<Prize | null>(null);
+  const [currentLeadId, setCurrentLeadId] = useState<number | null>(null);
+  const [lastLeadData, setLastLeadData] = useState<LeadData | null>(null);
 
   if (!tenantConfig) return null;
   
   const game = new URLSearchParams(location.search).get('game');
+
+  // Carrega os prêmios da roleta ao montar o componente
+  useEffect(() => {
+    const loadPrizes = async () => {
+      if (electronService.isRunningInElectron()) {
+        try {
+          const result = await electronService.getRoulettePrizes();
+          if (result.success && result.data) {
+            setPrizes(result.data);
+            console.log('✅ Prêmios da roleta carregados:', result.data);
+          }
+        } catch (error) {
+          console.error('❌ Erro ao carregar prêmios:', error);
+        }
+      }
+    };
+
+    loadPrizes();
+  }, []);
 
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
     setIsSubmitting(true);
@@ -50,14 +86,29 @@ const LeadForm: React.FC = () => {
             throw new Error(result.error || 'Erro ao salvar lead');
           }
           leadId = result.data.id ?? leadId;
-          console.log('✅ Lead salvo no Electron!');
+          console.log('✅ Lead salvo no Electron! ID:', leadId);
+          setLastLeadData(leadData as LeadData);
+          
+          // Sorteia um prêmio
+          console.log('🎲 Sorteando prêmio...');
+          const prizeResult = await electronService.getRandomPrize();
+          if (prizeResult.success && prizeResult.data) {
+            setWinningPrize(prizeResult.data);
+            setCurrentLeadId(leadId as number);
+            console.log('✅ Prêmio sorteado:', prizeResult.data.name);
+            
+            // Mostra a roleta
+            setIsSubmitting(false);
+            setShowRoulette(true);
+          } else {
+            throw new Error('Erro ao sortear prêmio');
+          }
         } else {
           console.log('📡 Salvando lead na API...');
           await saveLead(leadData);
+          startSession(leadId, leadData);
+          navigate(`/game/${game}`);
         }
-
-        startSession(leadId, leadData);
-        navigate(`/game/${game}`);
     } catch(error) {
         console.error("Failed to save lead:", error);
         alert('Erro ao salvar seus dados. Por favor, tente novamente.');
@@ -65,11 +116,50 @@ const LeadForm: React.FC = () => {
     }
   };
 
+  // Callback quando a roleta terminar de girar
+  const handleSpinComplete = async (prize: Prize) => {
+    console.log('🎉 Giro completo! Prêmio:', prize.name);
+    
+    if (currentLeadId && electronService.isRunningInElectron()) {
+      try {
+        // Salva o resultado do giro no banco
+        await electronService.saveSpinResult(currentLeadId, prize.id);
+        console.log('✅ Resultado do giro salvo!');
+      } catch (error) {
+        console.error('❌ Erro ao salvar resultado do giro:', error);
+      }
+    }
+  };
+
+  // Callback quando fechar a roleta
+  const handleCloseRoulette = () => {
+    setShowRoulette(false);
+    
+    // Navega para o jogo
+    if (currentLeadId) {
+      if (lastLeadData) {
+        startSession(currentLeadId, lastLeadData);
+      }
+      navigate(`/game/${game}`);
+    }
+  };
+
   const formConfig = tenantConfig.form_fields;
 
   return (
-    <div className="w-full h-screen flex flex-col justify-center items-center p-8" style={{backgroundColor: 'var(--color-background)'}}>
-      <div className="w-full max-w-2xl bg-white p-10 rounded-lg shadow-xl border-t-8" style={{borderColor: 'var(--color-primary)'}}>
+    <>
+      {/* Modal da Roleta */}
+      <Roulette
+        isOpen={showRoulette}
+        onClose={handleCloseRoulette}
+        onSpinComplete={handleSpinComplete}
+        prizes={prizes}
+        winningPrize={winningPrize}
+      />
+
+      {/* Formulário */}
+      <div className="w-full h-screen flex flex-col justify-center items-center p-8" style={{backgroundColor: 'var(--color-background)'}}>
+        <div className="w-full max-w-2xl bg-white p-10 rounded-lg shadow-xl border-t-8" style={{borderColor: 'var(--color-primary)'}}>
         <DynamicLogo type="center" className="w-32 h-32 mx-auto mb-6" />
         <h2 className="text-3xl font-bold text-center mb-2" style={{color: 'var(--color-text)'}}>{tenantConfig.content.form_title}</h2>
         <p className="text-lg text-center mb-8" style={{color: 'var(--color-text-secondary)'}}>{tenantConfig.content.form_subtitle}</p>
@@ -188,8 +278,9 @@ const LeadForm: React.FC = () => {
             </Button>
           </div>
         </form>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

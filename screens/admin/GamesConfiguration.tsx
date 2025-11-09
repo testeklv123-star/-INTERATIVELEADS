@@ -180,6 +180,7 @@ const GamesConfiguration: React.FC = () => {
       prize_wheel: { prizes: wheelPrizes },
       scratch_card: {
         overlay_color: tenantConfig.games_config.scratch_card.overlay_color,
+        background_image: tenantConfig.games_config.scratch_card.background_image,
         prizes: scratchPrizes
       },
       quiz: {
@@ -277,8 +278,9 @@ const GamesConfiguration: React.FC = () => {
             <div key={prize.id} className="bg-white p-6 rounded-lg shadow mb-4">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Rótulo</label>
+                  <label htmlFor={`wheel-label-${index}`} className="block text-sm font-medium text-gray-700 mb-1">Rótulo</label>
                   <input
+                    id={`wheel-label-${index}`}
                     type="text"
                     value={prize.label}
                     onChange={(e) => updateWheelPrize(index, 'label', e.target.value)}
@@ -287,8 +289,9 @@ const GamesConfiguration: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Nome Completo</label>
+                  <label htmlFor={`wheel-name-${index}`} className="block text-sm font-medium text-gray-700 mb-1">Nome Completo</label>
                   <input
+                    id={`wheel-name-${index}`}
                     type="text"
                     value={prize.name}
                     onChange={(e) => updateWheelPrize(index, 'name', e.target.value)}
@@ -297,8 +300,9 @@ const GamesConfiguration: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Probabilidade (%)</label>
+                  <label htmlFor={`wheel-probability-${index}`} className="block text-sm font-medium text-gray-700 mb-1">Probabilidade (%)</label>
                   <input
+                    id={`wheel-probability-${index}`}
                     type="number"
                     value={prize.probability}
                     onChange={(e) => updateWheelPrize(index, 'probability', Number(e.target.value))}
@@ -307,8 +311,9 @@ const GamesConfiguration: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Cor</label>
+                  <label htmlFor={`wheel-color-${index}`} className="block text-sm font-medium text-gray-700 mb-1">Cor</label>
                   <input
+                    id={`wheel-color-${index}`}
                     type="color"
                     value={prize.color}
                     onChange={(e) => updateWheelPrize(index, 'color', e.target.value)}
@@ -317,10 +322,11 @@ const GamesConfiguration: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor={`wheel-qty-total-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
                     Estoque Total
                   </label>
                   <input
+                    id={`wheel-qty-total-${index}`}
                     type="number"
                     value={prize.quantity_total}
                     onChange={(e) => updateWheelPrize(index, 'quantity_total', Number(e.target.value))}
@@ -329,10 +335,11 @@ const GamesConfiguration: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor={`wheel-qty-available-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
                     Disponível
                   </label>
                   <input
+                    id={`wheel-qty-available-${index}`}
                     type="number"
                     value={prize.quantity_available}
                     onChange={(e) => updateWheelPrize(index, 'quantity_available', Number(e.target.value))}
@@ -341,10 +348,11 @@ const GamesConfiguration: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor={`wheel-times-won-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
                     Vezes Ganho
                   </label>
                   <input
+                    id={`wheel-times-won-${index}`}
                     type="number"
                     value={prize.times_won}
                     readOnly
@@ -388,7 +396,9 @@ const GamesConfiguration: React.FC = () => {
             </p>
             <div className="flex gap-4 items-start">
               <div className="flex-1">
+                <label htmlFor="scratch-bg-upload" className="block text-sm font-medium text-gray-700 mb-1">Imagem de Fundo</label>
                 <input
+                  id="scratch-bg-upload"
                   type="file"
                   accept="image/*"
                   onChange={(e) => {
@@ -427,8 +437,9 @@ const GamesConfiguration: React.FC = () => {
             <div key={prize.id} className="bg-white p-6 rounded-lg shadow mb-4">
               <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Nome do Prêmio</label>
+                  <label htmlFor={`scratch-name-${index}`} className="block text-sm font-medium text-gray-700 mb-1">Nome do Prêmio</label>
                   <input
+                    id={`scratch-name-${index}`}
                     type="text"
                     value={prize.name}
                     onChange={(e) => updateScratchPrize(index, 'name', e.target.value)}
@@ -437,8 +448,9 @@ const GamesConfiguration: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Probabilidade (%)</label>
+                  <label htmlFor={`scratch-prob-${index}`} className="block text-sm font-medium text-gray-700 mb-1">Probabilidade (%)</label>
                   <input
+                    id={`scratch-prob-${index}`}
                     type="number"
                     value={prize.probability}
                     onChange={(e) => updateScratchPrize(index, 'probability', Number(e.target.value))}
@@ -447,8 +459,9 @@ const GamesConfiguration: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Total</label>
+                  <label htmlFor={`scratch-qty-total-${index}`} className="block text-sm font-medium text-gray-700 mb-1">Total</label>
                   <input
+                    id={`scratch-qty-total-${index}`}
                     type="number"
                     value={prize.quantity_total}
                     onChange={(e) => updateScratchPrize(index, 'quantity_total', Number(e.target.value))}
@@ -457,8 +470,9 @@ const GamesConfiguration: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Disponível</label>
+                  <label htmlFor={`scratch-qty-available-${index}`} className="block text-sm font-medium text-gray-700 mb-1">Disponível</label>
                   <input
+                    id={`scratch-qty-available-${index}`}
                     type="number"
                     value={prize.quantity_available}
                     onChange={(e) => updateScratchPrize(index, 'quantity_available', Number(e.target.value))}
@@ -500,8 +514,9 @@ const GamesConfiguration: React.FC = () => {
               <h3 className="text-lg font-semibold mb-3">Pergunta {qIndex + 1}</h3>
               
               <div className="mb-3">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Pergunta</label>
+                <label htmlFor={`quiz-question-${qIndex}`} className="block text-sm font-medium text-gray-700 mb-1">Pergunta</label>
                 <input
+                  id={`quiz-question-${qIndex}`}
                   type="text"
                   value={question.question}
                   onChange={(e) => updateQuizQuestion(qIndex, 'question', e.target.value)}
@@ -512,13 +527,14 @@ const GamesConfiguration: React.FC = () => {
               <div className="grid grid-cols-2 gap-3 mb-3">
                 {question.options.map((option, optIndex) => (
                   <div key={optIndex}>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor={`quiz-option-${qIndex}-${optIndex}`} className="block text-sm font-medium text-gray-700 mb-1">
                       Opção {optIndex + 1}
                       {question.correct === optIndex && (
                         <span className="text-green-600 ml-2">✓ Correta</span>
                       )}
                     </label>
                     <input
+                      id={`quiz-option-${qIndex}-${optIndex}`}
                       type="text"
                       value={option}
                       onChange={(e) => updateQuizOption(qIndex, optIndex, e.target.value)}
@@ -530,8 +546,9 @@ const GamesConfiguration: React.FC = () => {
 
               <div className="flex gap-3">
                 <div className="flex-1">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Resposta Correta</label>
+                  <label htmlFor={`quiz-correct-${qIndex}`} className="block text-sm font-medium text-gray-700 mb-1">Resposta Correta</label>
                   <select
+                    id={`quiz-correct-${qIndex}`}
                     value={question.correct}
                     onChange={(e) => updateQuizQuestion(qIndex, 'correct', Number(e.target.value))}
                     className="w-full px-3 py-2 border border-gray-300 rounded"
@@ -571,8 +588,9 @@ const GamesConfiguration: React.FC = () => {
             <div key={index} className="bg-white p-6 rounded-lg shadow mb-4">
               <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Min. Acertos</label>
+                  <label htmlFor={`quiz-rule-min-${index}`} className="block text-sm font-medium text-gray-700 mb-1">Min. Acertos</label>
                   <input
+                    id={`quiz-rule-min-${index}`}
                     type="number"
                     value={rule.min_correct}
                     onChange={(e) => updatePrizeRule(index, 'min_correct', Number(e.target.value))}
@@ -581,8 +599,9 @@ const GamesConfiguration: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Max. Acertos</label>
+                  <label htmlFor={`quiz-rule-max-${index}`} className="block text-sm font-medium text-gray-700 mb-1">Max. Acertos</label>
                   <input
+                    id={`quiz-rule-max-${index}`}
                     type="number"
                     value={rule.max_correct}
                     onChange={(e) => updatePrizeRule(index, 'max_correct', Number(e.target.value))}
@@ -591,8 +610,9 @@ const GamesConfiguration: React.FC = () => {
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Prêmio</label>
+                  <label htmlFor={`quiz-rule-prize-${index}`} className="block text-sm font-medium text-gray-700 mb-1">Prêmio</label>
                   <input
+                    id={`quiz-rule-prize-${index}`}
                     type="text"
                     value={rule.prize_name}
                     onChange={(e) => updatePrizeRule(index, 'prize_name', e.target.value)}
