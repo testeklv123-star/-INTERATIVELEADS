@@ -2,14 +2,61 @@ import React, { useState, useEffect } from 'react';
 import RouletteWheel from 'react-roulette-pro';
 import 'react-roulette-pro/dist/index.css';
 import Button from '../common/Button';
+import { Prize } from '../../types';
+import { addOpacityToColor } from '../../utils/colorUtils';
 
-interface Prize {
-  id: number;
-  name: string;
-  image_url: string;
-  color: string;
-  probability: number;
-}
+// ========== CONSTANTES ==========
+
+/**
+ * Constantes de animação da roleta
+ */
+const ANIMATION_CONSTANTS = {
+  /** Duração do giro em segundos */
+  SPIN_DURATION_SECONDS: 5,
+  /** Delay antes de mostrar resultado em milissegundos */
+  RESULT_DISPLAY_DELAY_MS: 500,
+} as const;
+
+/**
+ * Textos da interface da roleta
+ */
+const TEXTS = {
+  TITLE: '🎰 Roleta de Prêmios',
+  INSTRUCTION_SPIN: 'Clique no botão para girar!',
+  INSTRUCTION_SPINNING: 'Girando...',
+  BUTTON_SPIN: '🎲 GIRAR ROLETA',
+  BUTTON_SPINNING: '🎲 GIRANDO...',
+  CONGRATULATIONS: '🎉 Parabéns!',
+  YOU_WON: 'Você ganhou:',
+  CONTINUE: 'CONTINUAR',
+  LOADING_PRIZES: 'Carregando prêmios...',
+  FOOTER_TEXT: 'Você tem uma chance de girar a roleta e ganhar prêmios incríveis!',
+} as const;
+
+/**
+ * Estilos reutilizáveis para consistência visual
+ */
+const STYLES = {
+  primaryText: {
+    color: 'var(--color-primary)',
+    fontFamily: 'var(--font-primary)',
+  },
+  secondaryText: {
+    color: 'var(--color-text-secondary)',
+    fontFamily: 'var(--font-secondary)',
+  },
+  primaryBorder: {
+    borderColor: 'var(--color-primary)',
+  },
+  successText: {
+    color: 'var(--color-success)',
+  },
+  defaultText: {
+    color: 'var(--color-text)',
+  },
+} as const;
+
+// ========== INTERFACE ==========
 
 interface RouletteProps {
   isOpen: boolean;
@@ -31,16 +78,24 @@ const Roulette: React.FC<RouletteProps> = ({
   const [prizeIndex, setPrizeIndex] = useState(0);
   const [showResult, setShowResult] = useState(false);
 
-  // Prepara os dados da roleta no formato esperado pela biblioteca
+  // ========== PREPARAÇÃO DE DADOS ==========
+
+  /**
+   * Prepara os dados da roleta no formato esperado pela biblioteca react-roulette-pro
+   */
   const rouletteItems = prizes.map((prize) => ({
     id: prize.id.toString(),
-    image: prize.image_url,
-    text: prize.name,
+    image: prize.image_url || '',
+    text: prize.name || prize.label,
   }));
 
+  // ========== EFEITOS ==========
+
+  /**
+   * Atualiza o índice do prêmio vencedor quando ele é definido
+   */
   useEffect(() => {
     if (winningPrize && prizes.length > 0) {
-      // Encontra o índice do prêmio vencedor
       const index = prizes.findIndex(p => p.id === winningPrize.id);
       if (index !== -1) {
         setPrizeIndex(index);
@@ -48,24 +103,40 @@ const Roulette: React.FC<RouletteProps> = ({
     }
   }, [winningPrize, prizes]);
 
-  const handleSpin = () => {
-    if (!spinning && !hasSpun && winningPrize) {
+  // ========== HANDLERS ==========
+
+  /**
+   * Inicia o giro da roleta
+   * Só permite girar uma vez e quando há um prêmio definido
+   */
+  const handleSpin = (): void => {
+    const canSpin = !spinning && !hasSpun && winningPrize;
+    
+    if (canSpin) {
       setSpinning(true);
       setHasSpun(true);
     }
   };
 
-  const handleSpinEnd = () => {
+  /**
+   * Callback executado quando o giro termina
+   * Aguarda um delay antes de mostrar o resultado
+   */
+  const handleSpinEnd = (): void => {
     setSpinning(false);
+    
     setTimeout(() => {
       setShowResult(true);
       if (winningPrize) {
         onSpinComplete(winningPrize);
       }
-    }, 500);
+    }, ANIMATION_CONSTANTS.RESULT_DISPLAY_DELAY_MS);
   };
 
-  const handleClose = () => {
+  /**
+   * Fecha o modal e reseta todos os estados
+   */
+  const handleClose = (): void => {
     setShowResult(false);
     setHasSpun(false);
     setSpinning(false);
@@ -87,25 +158,19 @@ const Roulette: React.FC<RouletteProps> = ({
         {/* Header */}
         <div 
           className="p-6 text-center border-b-4"
-          style={{ borderColor: 'var(--color-primary)' }}
+          style={STYLES.primaryBorder}
         >
           <h2 
             className="text-4xl font-bold mb-2"
-            style={{ 
-              color: 'var(--color-primary)',
-              fontFamily: 'var(--font-primary)'
-            }}
+            style={STYLES.primaryText}
           >
-            🎰 Roleta de Prêmios
+            {TEXTS.TITLE}
           </h2>
           <p 
             className="text-xl"
-            style={{ 
-              color: 'var(--color-text-secondary)',
-              fontFamily: 'var(--font-secondary)'
-            }}
+            style={STYLES.secondaryText}
           >
-            {!hasSpun ? 'Clique no botão para girar!' : 'Girando...'}
+            {!hasSpun ? TEXTS.INSTRUCTION_SPIN : TEXTS.INSTRUCTION_SPINNING}
           </p>
         </div>
 
@@ -118,7 +183,7 @@ const Roulette: React.FC<RouletteProps> = ({
                 prizeIndex={prizeIndex}
                 start={spinning}
                 onPrizeDefined={handleSpinEnd}
-                spinningTime={5}
+                spinningTime={ANIMATION_CONSTANTS.SPIN_DURATION_SECONDS}
                 options={{
                   withoutAnimation: false,
                   stopInCenter: true
@@ -133,9 +198,9 @@ const Roulette: React.FC<RouletteProps> = ({
             <div className="text-center py-12">
               <p 
                 className="text-2xl"
-                style={{ color: 'var(--color-text-secondary)' }}
+                style={STYLES.secondaryText}
               >
-                Carregando prêmios...
+                {TEXTS.LOADING_PRIZES}
               </p>
             </div>
           )}
@@ -148,7 +213,7 @@ const Roulette: React.FC<RouletteProps> = ({
                 disabled={spinning}
                 className="w-full py-6 text-2xl font-bold"
               >
-                {spinning ? '🎲 GIRANDO...' : '🎲 GIRAR ROLETA'}
+                {spinning ? TEXTS.BUTTON_SPINNING : TEXTS.BUTTON_SPIN}
               </Button>
             </div>
           )}
@@ -159,29 +224,31 @@ const Roulette: React.FC<RouletteProps> = ({
               <div 
                 className="p-6 rounded-xl text-center border-4"
                 style={{ 
-                  backgroundColor: winningPrize.color + '20',
+                  backgroundColor: addOpacityToColor(winningPrize.color, '20'),
                   borderColor: winningPrize.color
                 }}
               >
                 <h3 
                   className="text-3xl font-bold mb-4"
-                  style={{ color: 'var(--color-success)' }}
+                  style={STYLES.successText}
                 >
-                  🎉 Parabéns!
+                  {TEXTS.CONGRATULATIONS}
                 </h3>
                 <p 
                   className="text-2xl font-semibold mb-4"
-                  style={{ color: 'var(--color-text)' }}
+                  style={STYLES.defaultText}
                 >
-                  Você ganhou:
+                  {TEXTS.YOU_WON}
                 </p>
-                <div className="mb-4">
-                  <img 
-                    src={winningPrize.image_url} 
-                    alt={winningPrize.name}
-                    className="w-32 h-32 mx-auto rounded-lg shadow-lg object-cover"
-                  />
-                </div>
+                {winningPrize.image_url && (
+                  <div className="mb-4">
+                    <img 
+                      src={winningPrize.image_url} 
+                      alt={winningPrize.name}
+                      className="w-32 h-32 mx-auto rounded-lg shadow-lg object-cover"
+                    />
+                  </div>
+                )}
                 <p 
                   className="text-3xl font-bold"
                   style={{ color: winningPrize.color }}
@@ -194,7 +261,7 @@ const Roulette: React.FC<RouletteProps> = ({
                 onClick={handleClose}
                 className="w-full mt-6 py-4 text-xl"
               >
-                CONTINUAR
+                {TEXTS.CONTINUE}
               </Button>
             </div>
           )}
@@ -208,9 +275,9 @@ const Roulette: React.FC<RouletteProps> = ({
           >
             <p 
               className="text-sm"
-              style={{ color: 'var(--color-text-secondary)' }}
+              style={STYLES.secondaryText}
             >
-              Você tem uma chance de girar a roleta e ganhar prêmios incríveis!
+              {TEXTS.FOOTER_TEXT}
             </p>
           </div>
         )}

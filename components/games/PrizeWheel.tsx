@@ -1,10 +1,30 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTenantStore } from '../../stores/tenantStore';
 import { Prize } from '../../types';
+import { selectPrizeByProbability } from '../../utils/prizeSelector';
 import Button from '../common/Button';
 import Modal from '../common/Modal';
 import DynamicLogo from '../common/DynamicLogo';
+
+// ========== CONSTANTES ==========
+
+const ANIMATION_CONSTANTS = {
+  /** Duração da animação de giro em milissegundos */
+  SPIN_DURATION_MS: 6000,
+  /** Número de voltas completas antes de parar */
+  SPIN_CYCLES: 5,
+  /** Ângulo do ponteiro (topo = 270° em coordenadas SVG) */
+  POINTER_ANGLE: 270,
+} as const;
+
+const TEXTS = {
+  TITLE: 'Gire a Roda da Fortuna!',
+  BUTTON_SPIN: 'GIRAR!',
+  BUTTON_SPINNING: 'GIRANDO...',
+  MODAL_TITLE: 'Parabéns!',
+  MODAL_TEXT: 'Você ganhou:',
+} as const;
 
 // Helper function to create SVG path for a wheel slice
 const getPath = (sliceAngle: number, size: number, index: number): string => {
@@ -31,40 +51,34 @@ const PrizeWheel: React.FC = () => {
   const [rotation, setRotation] = useState(0);
   const [wonPrize, setWonPrize] = useState<Prize | null>(null);
 
-  const spinWheel = () => {
+  /**
+   * Executa o giro da roda e seleciona um prêmio baseado em probabilidade
+   */
+  const spinWheel = (): void => {
     if (isSpinning) return;
     setIsSpinning(true);
 
-    const totalProbability = prizes.reduce((sum, p) => sum + p.probability, 0);
-    let random = Math.random() * totalProbability;
-    
-    let selectedPrizeIndex = -1;
-    for (let i = 0; i < prizes.length; i++) {
-        if (random < prizes[i].probability) {
-            selectedPrizeIndex = i;
-            break;
-        }
-        random -= prizes[i].probability;
-    }
-    if (selectedPrizeIndex === -1) selectedPrizeIndex = prizes.length -1;
+    // Usa função utilitária para seleção baseada em probabilidade
+    const selectedPrizeIndex = selectPrizeByProbability(prizes);
 
+    // Calcula ângulos para animação
     const sliceAngle = 360 / prizes.length;
     const prizeAngle = sliceAngle * selectedPrizeIndex + (sliceAngle / 2);
     
-    // Correction: Align with the top pointer (270 degrees in SVG coordinates)
-    const POINTER_ANGLE = 270;
-    const rotationNeeded = POINTER_ANGLE - prizeAngle;
+    // Alinha com o ponteiro no topo (270° em coordenadas SVG)
+    const rotationNeeded = ANIMATION_CONSTANTS.POINTER_ANGLE - prizeAngle;
     const randomOffset = (Math.random() - 0.5) * (sliceAngle * 0.8);
     const finalAngle = rotationNeeded + randomOffset;
     
-    const spinCycles = 5;
-    const newRotation = rotation + (360 * spinCycles) + finalAngle;
+    // Calcula rotação final com múltiplas voltas
+    const newRotation = rotation + (360 * ANIMATION_CONSTANTS.SPIN_CYCLES) + finalAngle;
     setRotation(newRotation);
 
+    // Define o prêmio após a animação
     setTimeout(() => {
       setIsSpinning(false);
       setWonPrize(prizes[selectedPrizeIndex]);
-    }, 6000); // Corresponds to animation duration
+    }, ANIMATION_CONSTANTS.SPIN_DURATION_MS);
   };
 
   const wheelSize = 600;
@@ -72,7 +86,9 @@ const PrizeWheel: React.FC = () => {
 
   return (
     <div className="w-full min-h-screen flex flex-col justify-center items-center p-4 md:p-8 py-8 overflow-auto" style={{backgroundColor: 'var(--color-background)'}}>
-      <h1 className="text-3xl md:text-5xl font-bold mb-4 md:mb-8" style={{color: 'var(--color-primary)'}}>Gire a Roda da Fortuna!</h1>
+      <h1 className="text-3xl md:text-5xl font-bold mb-4 md:mb-8" style={{color: 'var(--color-primary)'}}>
+        {TEXTS.TITLE}
+      </h1>
       
       <div className="relative flex justify-center items-center mb-4 md:mb-8 w-full max-w-[90vmin] aspect-square">
         <div 
@@ -85,8 +101,11 @@ const PrizeWheel: React.FC = () => {
         />
 
         <div 
-          className="relative transition-transform duration-[6000ms] ease-out w-full h-full"
-          style={{ transform: `rotate(${rotation}deg)` }}
+          className="relative transition-transform ease-out w-full h-full"
+          style={{ 
+            transform: `rotate(${rotation}deg)`,
+            transitionDuration: `${ANIMATION_CONSTANTS.SPIN_DURATION_MS}ms`
+          }}
         >
           <svg width="100%" height="100%" viewBox={`0 0 ${wheelSize} ${wheelSize}`} className="w-full h-full">
             {prizes.map((prize, index) => (
@@ -114,16 +133,16 @@ const PrizeWheel: React.FC = () => {
       
       <div className="mb-8">
         <Button onClick={spinWheel} disabled={isSpinning}>
-          {isSpinning ? 'GIRANDO...' : 'GIRAR!'}
+          {isSpinning ? TEXTS.BUTTON_SPINNING : TEXTS.BUTTON_SPIN}
         </Button>
       </div>
 
       <Modal
         isOpen={!!wonPrize}
         onClose={() => navigate('/thank-you')}
-        title="Parabéns!"
+        title={TEXTS.MODAL_TITLE}
       >
-        <p>Você ganhou:</p>
+        <p>{TEXTS.MODAL_TEXT}</p>
         <p className="font-bold text-3xl mt-2">{wonPrize?.name}</p>
       </Modal>
     </div>

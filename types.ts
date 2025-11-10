@@ -3,6 +3,7 @@ export interface Prize {
   id: string;
   label: string;
   name: string;
+  image_url?: string; // URL da imagem do prêmio (opcional)
   probability: number;
   color: string;
   quantity_available?: number; // Estoque disponível
